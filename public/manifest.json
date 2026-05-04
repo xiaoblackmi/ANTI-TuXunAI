@@ -1,0 +1,22 @@
+{
+  "manifest_version": 3,
+  "name": "GeoGuessr AI Assistant",
+  "version": "0.1.0",
+  "description": "Personal street-view observation and review trainer. Analyzes only the visible page screenshot.",
+  "permissions": ["activeTab", "tabs", "scripting", "storage"],
+  "host_permissions": ["<all_urls>"],
+  "action": {
+    "default_title": "GeoGuessr AI Assistant",
+    "default_popup": "src/popup/popup.html"
+  },
+  "options_page": "src/options/options.html",
+  "background": {
+    "service_worker": "background/serviceWorker.js",
+    "type": "module"
+  },
+  "icons": {
+    "16": "icons/icon16.svg",
+    "48": "icons/icon48.svg",
+    "128": "icons/icon128.svg"
+  }
+}

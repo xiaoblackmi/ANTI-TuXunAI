@@ -10,6 +10,23 @@ Chrome Manifest V3 browser extension MVP for personal street-view observation tr
 - API keys are entered by the user and stored locally in IndexedDB.
 - Review cases do not store screenshots in this MVP. Only a screenshot hash is saved.
 
+## Machine Setup
+
+Recommended local setup:
+
+- Node.js `24.14.1` from `.nvmrc`
+- npm `>=10`
+- Git
+- GitHub CLI (`gh`) for push and PR workflows
+
+Bootstrap this machine with:
+
+```bash
+npm run setup:machine
+```
+
+This installs dependencies, runs `typecheck`, runs a production build, and checks whether GitHub CLI is available.
+
 ## Install
 
 ```bash
@@ -72,7 +89,7 @@ Alibaba Cloud documents Qwen-VL as OpenAI-compatible and lists `qwen3-vl-flash` 
 
 ## Usage
 
-1. Open a GeoGuessr / 图寻 style street-view page.
+1. Open a GeoGuessr or similar street-view page.
 2. Click the extension icon.
 3. Choose Fast Mode or Detailed Mode.
 4. Click Analyze Current Street View.
@@ -98,6 +115,7 @@ This MVP does not train a model. It implements local continuous learning through
 ## Scripts
 
 ```bash
+npm run setup:machine
 npm run typecheck
 npm run build
 ```
@@ -105,3 +123,7 @@ npm run build
 ## Notes
 
 Because the API endpoint is user-configurable, the extension declares broad host permissions so it can call OpenAI-compatible providers directly from the browser extension context.
+
+Remote repository for this working copy:
+
+- `origin`: `https://github.com/xiaoblackmi/ANTI-TuXunAI.git`

@@ -47,6 +47,9 @@ export interface AppSettings {
   apiBaseUrl: string;
   apiKey: string;
   modelName: string;
+  streetClipApiBaseUrl: string;
+  streetClipApiKey: string;
+  streetClipModelName: string;
   timeoutMs: number;
   imageQuality: number;
   useResponseFormat: boolean;

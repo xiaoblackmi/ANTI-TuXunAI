@@ -24,6 +24,7 @@ export function SettingsForm({
   status
 }: SettingsFormProps) {
   const [showKey, setShowKey] = useState(false);
+  const [showStreetClipKey, setShowStreetClipKey] = useState(false);
 
   function update<K extends keyof AppSettings>(key: K, value: AppSettings[K]) {
     onChange({ ...settings, [key]: value });
@@ -38,7 +39,8 @@ export function SettingsForm({
       }}
     >
       <section className="settings-section">
-        <h2>API 配置</h2>
+        <h2>Qwen 精准模式</h2>
+        <p className="muted-text">精准模式继续使用 OpenAI-compatible Vision API。</p>
         <div className="preset-grid" aria-label="API 预设">
           <button
             type="button"
@@ -124,6 +126,37 @@ export function SettingsForm({
       </section>
 
       <section className="settings-section">
+        <h2>StreetCLIP 快速模式</h2>
+        <p className="muted-text">快速模式使用 Hugging Face 上的 StreetCLIP，只做国家候选粗筛，不调用 Qwen。</p>
+        <label>
+          Hugging Face Router URL
+          <input value={settings.streetClipApiBaseUrl} onChange={(event) => update("streetClipApiBaseUrl", event.target.value)} />
+        </label>
+        <label>
+          Hugging Face Token
+          <div className="secret-field">
+            <input
+              type={showStreetClipKey ? "text" : "password"}
+              value={settings.streetClipApiKey}
+              onChange={(event) => update("streetClipApiKey", event.target.value)}
+              placeholder="hf_..."
+            />
+            <button type="button" className="icon-button" onClick={() => setShowStreetClipKey((value) => !value)}>
+              {showStreetClipKey ? <EyeOff size={16} /> : <Eye size={16} />}
+            </button>
+          </div>
+        </label>
+        <label>
+          StreetCLIP 模型名
+          <input
+            value={settings.streetClipModelName}
+            onChange={(event) => update("streetClipModelName", event.target.value)}
+            placeholder="geolocal/StreetCLIP"
+          />
+        </label>
+      </section>
+
+      <section className="settings-section">
         <h2>请求与图片</h2>
         <label>
           请求超时时间（毫秒）
@@ -173,7 +206,7 @@ export function SettingsForm({
           {saving ? "保存中..." : "保存设置"}
         </button>
         <button className="secondary-button" type="button" onClick={onTestApi} disabled={testing || saving}>
-          {testing ? "测试中..." : "测试 API"}
+          {testing ? "测试中..." : "测试 Qwen API"}
         </button>
         <button className="danger-button" type="button" onClick={onClearData}>
           <Trash2 size={16} />

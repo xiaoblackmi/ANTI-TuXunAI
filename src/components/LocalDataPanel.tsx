@@ -360,6 +360,13 @@ function normalizeBackup(input: unknown) {
       apiBaseUrl: typeof input.settings.apiBaseUrl === "string" ? input.settings.apiBaseUrl : "",
       apiKey: typeof input.settings.apiKey === "string" ? input.settings.apiKey : "",
       modelName: typeof input.settings.modelName === "string" ? input.settings.modelName : "qwen3-vl-flash",
+      streetClipApiBaseUrl:
+        typeof input.settings.streetClipApiBaseUrl === "string"
+          ? input.settings.streetClipApiBaseUrl
+          : "https://router.huggingface.co/hf-inference/models/geolocal/StreetCLIP",
+      streetClipApiKey: typeof input.settings.streetClipApiKey === "string" ? input.settings.streetClipApiKey : "",
+      streetClipModelName:
+        typeof input.settings.streetClipModelName === "string" ? input.settings.streetClipModelName : "geolocal/StreetCLIP",
       timeoutMs: typeof input.settings.timeoutMs === "number" ? input.settings.timeoutMs : 5000,
       imageQuality: typeof input.settings.imageQuality === "number" ? input.settings.imageQuality : 0.72,
       useResponseFormat: input.settings.useResponseFormat !== false,

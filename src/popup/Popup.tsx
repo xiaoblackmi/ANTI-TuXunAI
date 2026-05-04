@@ -7,9 +7,11 @@ import { normalizeAnalysisResult } from "../lib/analysisResult";
 import { sha256Text } from "../lib/hash";
 import { captureCurrentTab } from "../lib/imageCapture";
 import { compressImage } from "../lib/imageCompress";
-import { buildDetailedGeoPrompt, buildFastGeoPrompt } from "../lib/promptBuilder";
+import { callStreetClipZeroShot, streetClipScoresToAnalysis } from "../lib/streetclip";
+import { STREETCLIP_CANDIDATE_LABELS } from "../lib/streetclipLabels";
+import { buildDetailedGeoPrompt } from "../lib/promptBuilder";
 import { getRecentLearnedRules, getSettings } from "../lib/storage";
-import type { AnalysisMode, AppSettings, LastAnalysis } from "../lib/types";
+import type { AnalysisMode, AnalysisResult, AppSettings, LastAnalysis } from "../lib/types";
 
 const LAST_ANALYSIS_KEY = "geoAssistantLastAnalysis";
 
@@ -39,41 +41,67 @@ export function Popup() {
 
     try {
       const currentSettings = settings ?? (await getSettings());
-      if (!currentSettings.apiKey.trim()) {
-        throw new Error("请先在设置页填写 API Key。");
-      }
-
       const screenshot = await captureCurrentTab();
       const maxSize = mode === "fast" ? 640 : 1024;
       const compressed = await compressImage(screenshot, maxSize, currentSettings.imageQuality);
       const screenshotHash = await sha256Text(compressed.slice(0, 200000));
 
-      setStatus(mode === "fast" ? "快速模式：跳过历史规则，避免上一张图影响本次判断..." : "正在读取本地学习规则...");
-      const learnedRules = currentSettings.enableHistoryRetrieval && mode === "detailed" ? await getRecentLearnedRules(6) : [];
+      let result: AnalysisResult;
+      let modelName = currentSettings.modelName;
 
-      const prompt = mode === "fast" ? buildFastGeoPrompt(learnedRules) : buildDetailedGeoPrompt(learnedRules);
-      setStatus(mode === "fast" ? "正在快速判断..." : "正在精准分析...");
+      if (mode === "fast") {
+        setStatus("快速模式使用 StreetCLIP 粗筛国家候选...");
+        const streetClipResponse = await callStreetClipZeroShot(compressed, {
+          apiBaseUrl: currentSettings.streetClipApiBaseUrl,
+          apiKey: currentSettings.streetClipApiKey,
+          modelName: currentSettings.streetClipModelName,
+          timeoutMs: Math.max(currentSettings.timeoutMs, 8000),
+          topK: 3,
+          candidateLabels: STREETCLIP_CANDIDATE_LABELS,
+          hypothesisTemplate: "This street-view image is from {}.",
+          debug: currentSettings.enableDebugLogs
+        });
 
-      const response = await callVisionModel(compressed, prompt, {
-        apiBaseUrl: currentSettings.apiBaseUrl,
-        apiKey: currentSettings.apiKey,
-        modelName: currentSettings.modelName,
-        timeoutMs: currentSettings.timeoutMs,
-        maxTokens: mode === "fast" ? 520 : 1100,
-        useResponseFormat: currentSettings.useResponseFormat,
-        debug: currentSettings.enableDebugLogs
-      });
+        if (!streetClipResponse.ok || !streetClipResponse.data) {
+          throw new Error(streetClipResponse.error || "StreetCLIP 返回为空，请重试。");
+        }
 
-      if (!response.ok || !response.data) {
-        throw new Error(response.error || "模型返回为空，请重试。");
+        result = streetClipScoresToAnalysis(streetClipResponse.data);
+        modelName = currentSettings.streetClipModelName;
+        setStatus("StreetCLIP 快速判断完成。");
+      } else {
+        if (!currentSettings.apiKey.trim()) {
+          throw new Error("请先在设置页填写 Qwen API Key。");
+        }
+
+        setStatus("正在读取本地学习规则...");
+        const learnedRules = currentSettings.enableHistoryRetrieval ? await getRecentLearnedRules(6) : [];
+        const prompt = buildDetailedGeoPrompt(learnedRules);
+        setStatus("正在精准分析...");
+
+        const response = await callVisionModel(compressed, prompt, {
+          apiBaseUrl: currentSettings.apiBaseUrl,
+          apiKey: currentSettings.apiKey,
+          modelName: currentSettings.modelName,
+          timeoutMs: currentSettings.timeoutMs,
+          maxTokens: 1100,
+          useResponseFormat: currentSettings.useResponseFormat,
+          debug: currentSettings.enableDebugLogs
+        });
+
+        if (!response.ok || !response.data) {
+          throw new Error(response.error || "模型返回为空，请重试。");
+        }
+
+        result = normalizeAnalysisResult(response.data);
       }
 
       const nextAnalysis: LastAnalysis = {
         createdAt: new Date().toISOString(),
         mode,
         screenshotHash,
-        modelName: currentSettings.modelName,
-        result: normalizeAnalysisResult(response.data)
+        modelName,
+        result
       };
 
       await chrome.storage.local.set({ [LAST_ANALYSIS_KEY]: nextAnalysis });
@@ -118,10 +146,10 @@ export function Popup() {
       <section className="toolbar">
         <div className="mode-toggle" role="group" aria-label="分析模式">
           <button className={mode === "fast" ? "active" : ""} type="button" onClick={() => setMode("fast")}>
-            快速
+            StreetCLIP 快速
           </button>
           <button className={mode === "detailed" ? "active" : ""} type="button" onClick={() => setMode("detailed")}>
-            精准
+            Qwen 精准
           </button>
         </div>
         <button className="primary-button" type="button" disabled={loading} onClick={analyzeCurrentView}>

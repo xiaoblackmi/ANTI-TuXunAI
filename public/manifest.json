@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "图寻 AI 助手",
   "version": "0.1.0",
-  "description": "个人街景观察与复盘训练工具，只分析当前可见页面截图。",
+  "description": "个人街景观察与复盘训练工具，快速模式使用 StreetCLIP，只分析当前可见页面截图。",
   "permissions": ["activeTab", "tabs", "scripting", "storage"],
   "host_permissions": ["<all_urls>"],
   "action": {

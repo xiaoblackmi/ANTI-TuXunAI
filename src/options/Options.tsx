@@ -99,6 +99,7 @@ function sanitizeSettings(settings: AppSettings): AppSettings {
   return {
     ...settings,
     apiBaseUrl: settings.apiBaseUrl.trim().replace(/\/+$/, ""),
+    streetClipApiBaseUrl: settings.streetClipApiBaseUrl.trim().replace(/\/+$/, ""),
     timeoutMs: Math.max(2000, settings.timeoutMs),
     imageQuality: Math.min(0.95, Math.max(0.35, settings.imageQuality))
   };

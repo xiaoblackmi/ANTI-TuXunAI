@@ -6,12 +6,23 @@ interface SettingsFormProps {
   settings: AppSettings;
   onChange: (settings: AppSettings) => void;
   onSave: () => void;
+  onTestApi: () => void;
   onClearData: () => void;
   saving: boolean;
+  testing: boolean;
   status: string;
 }
 
-export function SettingsForm({ settings, onChange, onSave, onClearData, saving, status }: SettingsFormProps) {
+export function SettingsForm({
+  settings,
+  onChange,
+  onSave,
+  onTestApi,
+  onClearData,
+  saving,
+  testing,
+  status
+}: SettingsFormProps) {
   const [showKey, setShowKey] = useState(false);
 
   function update<K extends keyof AppSettings>(key: K, value: AppSettings[K]) {
@@ -160,6 +171,9 @@ export function SettingsForm({ settings, onChange, onSave, onClearData, saving, 
       <div className="settings-actions">
         <button className="primary-button" type="submit" disabled={saving}>
           {saving ? "Saving..." : "Save settings"}
+        </button>
+        <button className="secondary-button" type="button" onClick={onTestApi} disabled={testing || saving}>
+          {testing ? "Testing..." : "Test API"}
         </button>
         <button className="danger-button" type="button" onClick={onClearData}>
           <Trash2 size={16} />

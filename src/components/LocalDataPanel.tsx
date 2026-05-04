@@ -1,5 +1,5 @@
-import { RefreshCw, Save, Trash2 } from "lucide-react";
-import { useEffect, useState } from "react";
+import { Download, RefreshCw, Save, Trash2, Upload } from "lucide-react";
+import { useRef, useEffect, useState } from "react";
 import {
   deleteGameCase,
   deleteLearnedRule,
@@ -19,6 +19,7 @@ export function LocalDataPanel() {
   const [editingRuleId, setEditingRuleId] = useState<string | null>(null);
   const [draftRule, setDraftRule] = useState<LearnedRule | null>(null);
   const [status, setStatus] = useState("");
+  const importInputRef = useRef<HTMLInputElement | null>(null);
 
   useEffect(() => {
     void refresh();
@@ -66,6 +67,36 @@ export function LocalDataPanel() {
     setDraftRule({ ...rule });
   }
 
+  function exportRules() {
+    const payload = JSON.stringify({ exportedAt: new Date().toISOString(), learnedRules: rules }, null, 2);
+    const blob = new Blob([payload], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const anchor = document.createElement("a");
+    anchor.href = url;
+    anchor.download = `geo-ai-learned-rules-${new Date().toISOString().slice(0, 10)}.json`;
+    anchor.click();
+    URL.revokeObjectURL(url);
+    setStatus(`Exported ${rules.length} rule(s).`);
+  }
+
+  async function importRules(file: File | undefined) {
+    if (!file) return;
+    try {
+      const text = await file.text();
+      const parsed = JSON.parse(text) as unknown;
+      const importedRules = normalizeImportedRules(parsed);
+      for (const rule of importedRules) {
+        await saveLearnedRule(rule);
+      }
+      setStatus(`Imported ${importedRules.length} rule(s).`);
+      await refresh();
+    } catch (error) {
+      setStatus(error instanceof Error ? `Import failed: ${error.message}` : "Import failed.");
+    } finally {
+      if (importInputRef.current) importInputRef.current.value = "";
+    }
+  }
+
   return (
     <section className="local-data-panel">
       <div className="section-head">
@@ -76,6 +107,24 @@ export function LocalDataPanel() {
         <button className="icon-button" type="button" onClick={() => void refresh()} title="Refresh local data">
           <RefreshCw size={16} />
         </button>
+      </div>
+
+      <div className="library-actions">
+        <button className="secondary-button" type="button" onClick={exportRules} disabled={rules.length === 0}>
+          <Download size={16} />
+          Export rules
+        </button>
+        <button className="secondary-button" type="button" onClick={() => importInputRef.current?.click()}>
+          <Upload size={16} />
+          Import rules
+        </button>
+        <input
+          ref={importInputRef}
+          type="file"
+          accept="application/json,.json"
+          className="visually-hidden"
+          onChange={(event) => void importRules(event.target.files?.[0])}
+        />
       </div>
 
       <div className="mode-toggle data-tabs" role="group" aria-label="Local data view">
@@ -209,4 +258,42 @@ function normalizeCsv(value: string): string[] {
     .split(",")
     .map((item) => item.trim())
     .filter(Boolean);
+}
+
+function normalizeImportedRules(input: unknown): LearnedRule[] {
+  const rawRules = Array.isArray(input)
+    ? input
+    : isRecord(input) && Array.isArray(input.learnedRules)
+      ? input.learnedRules
+      : [];
+
+  const rules = rawRules.flatMap((value): LearnedRule[] => {
+    if (!isRecord(value) || typeof value.ruleText !== "string") return [];
+    const now = new Date().toISOString();
+    return [
+      {
+        id: typeof value.id === "string" ? value.id : crypto.randomUUID(),
+        createdAt: typeof value.createdAt === "string" ? value.createdAt : now,
+        title: typeof value.title === "string" && value.title.trim() ? value.title : "Imported rule",
+        ruleText: value.ruleText,
+        country: typeof value.country === "string" ? value.country : undefined,
+        region: typeof value.region === "string" ? value.region : undefined,
+        tags: Array.isArray(value.tags) ? value.tags.filter((tag): tag is string => typeof tag === "string") : [],
+        confidence: typeof value.confidence === "number" ? Math.min(1, Math.max(0, value.confidence)) : 0.6,
+        sourceCaseIds: Array.isArray(value.sourceCaseIds)
+          ? value.sourceCaseIds.filter((id): id is string => typeof id === "string")
+          : []
+      }
+    ];
+  });
+
+  if (rules.length === 0) {
+    throw new Error("No valid learned rules found.");
+  }
+
+  return rules;
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null;
 }

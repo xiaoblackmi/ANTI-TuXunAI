@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { FeedbackModal } from "../components/FeedbackModal";
 import { PredictionCard } from "../components/PredictionCard";
 import { callVisionModel } from "../lib/apiClient";
+import { buildRuleQueryFromAnalysis } from "../lib/analysisQuery";
 import { retrieveRelevantRules } from "../lib/caseRetrieval";
 import { sha256Text } from "../lib/hash";
 import { captureCurrentTab } from "../lib/imageCapture";
@@ -52,7 +53,7 @@ export function Popup() {
       const learnedRules = currentSettings.enableHistoryRetrieval
         ? mode === "fast"
           ? await getRecentLearnedRules(5)
-          : await retrieveRelevantRules({}, 10)
+          : await retrieveRelevantRules(buildRuleQueryFromAnalysis(lastAnalysis?.result), 10)
         : [];
 
       const prompt = mode === "fast" ? buildFastGeoPrompt(learnedRules) : buildDetailedGeoPrompt(learnedRules);

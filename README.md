@@ -66,6 +66,8 @@ Open the extension Options page and set:
 - Model Name, for example `qwen3-vl-flash`
 - Timeout, image quality, history retrieval, and debug settings
 
+Use `Test API` in Options to verify that the configured provider can return parseable JSON before trying a screenshot analysis.
+
 The client calls:
 
 ```text
@@ -110,7 +112,30 @@ This MVP does not train a model. It implements local continuous learning through
 - `GameCase` stores round feedback.
 - `LearnedRule` stores short reusable correction rules.
 - Future analysis reads the most recent or most relevant rules and includes them in the prompt.
+- The Options page includes a Local Library for viewing cases and learned rules, editing/deleting rules, marking cases useful, and importing/exporting rules as JSON.
 - `embeddingSearch()` is reserved for future vector search integration.
+
+Detailed Mode uses the previous analysis, when available, to retrieve more relevant learned rules by country, clue type, and extracted keywords.
+
+## Current Status
+
+Implemented:
+
+- MV3 extension scaffold with Popup, Options, service worker, and injected floating panel.
+- Visible-tab screenshot capture, canvas compression, and screenshot hashing.
+- OpenAI-compatible vision calls with Qwen3-VL Flash defaults and DashScope presets.
+- Timeout handling, strict JSON parsing, and fallback parsing for fenced or surrounded JSON.
+- Local IndexedDB settings, cases, learned rules, and review learning flow.
+- Local Library management for cases and learned rules.
+- Learned-rule import/export.
+- API smoke test from Options.
+- Tests for JSON parsing, prompt rule injection, rule ranking, and query extraction.
+
+Still manual:
+
+- Loading `dist/` in Chrome and checking the extension UI visually.
+- Providing a real DashScope API key for live API verification.
+- Authenticating GitHub CLI with `gh auth login` if CLI PR workflows are needed.
 
 ## Scripts
 

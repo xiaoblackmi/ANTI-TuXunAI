@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { FeedbackModal } from "../components/FeedbackModal";
 import { PredictionCard } from "../components/PredictionCard";
 import { callVisionModel } from "../lib/apiClient";
+import { normalizeAnalysisResult } from "../lib/analysisResult";
 import { buildRuleQueryFromAnalysis } from "../lib/analysisQuery";
 import { retrieveRelevantRules } from "../lib/caseRetrieval";
 import { sha256Text } from "../lib/hash";
@@ -183,18 +184,4 @@ async function showFloatingPanel(result: LastAnalysis["result"]) {
   });
 
   await chrome.tabs.sendMessage(tab.id, { type: "GEO_ASSISTANT_SHOW", result });
-}
-
-function normalizeAnalysisResult(result: LastAnalysis["result"]): LastAnalysis["result"] {
-  return {
-    top_predictions: Array.isArray(result.top_predictions) ? result.top_predictions.slice(0, 3) : [],
-    estimated_location: result.estimated_location ?? { lat: null, lng: null, radius_km: 500 },
-    clues: Array.isArray(result.clues) ? result.clues : [],
-    fast_answer: result.fast_answer || result.top_predictions?.[0]?.country || "Unknown",
-    detailed_reasoning: result.detailed_reasoning || "",
-    next_observation_suggestions: Array.isArray(result.next_observation_suggestions)
-      ? result.next_observation_suggestions
-      : [],
-    uncertainties: Array.isArray(result.uncertainties) ? result.uncertainties : []
-  };
 }

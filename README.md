@@ -57,6 +57,18 @@ The unpacked extension is generated in `dist/`.
 4. Select the `dist/` folder.
 5. Pin `GeoGuessr AI Assistant` if desired.
 
+For a repeatable local launch with an isolated Chrome profile:
+
+```bash
+npm run open:extension
+```
+
+You can pass a page URL after `--`, for example:
+
+```bash
+npm run open:extension -- https://www.google.com/maps
+```
+
 ## Configure API
 
 Open the extension Options page and set:
@@ -149,6 +161,7 @@ npm run test
 npm run typecheck
 npm run build
 npm run validate:extension
+npm run open:extension
 ```
 
 ## Notes

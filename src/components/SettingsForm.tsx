@@ -28,7 +28,7 @@ export function SettingsForm({ settings, onChange, onSave, onClearData, saving, 
     >
       <section className="settings-section">
         <h2>API</h2>
-        <div className="preset-grid" aria-label="API 预设">
+        <div className="preset-grid" aria-label="API presets">
           <button
             type="button"
             className="secondary-button"
@@ -41,7 +41,7 @@ export function SettingsForm({ settings, onChange, onSave, onClearData, saving, 
               })
             }
           >
-            Qwen 新加坡
+            Qwen Singapore
           </button>
           <button
             type="button"
@@ -55,7 +55,7 @@ export function SettingsForm({ settings, onChange, onSave, onClearData, saving, 
               })
             }
           >
-            Qwen 北京
+            Qwen Beijing
           </button>
           <button
             type="button"
@@ -69,7 +69,7 @@ export function SettingsForm({ settings, onChange, onSave, onClearData, saving, 
               })
             }
           >
-            Qwen 美国
+            Qwen US
           </button>
         </div>
         <label>
@@ -77,7 +77,7 @@ export function SettingsForm({ settings, onChange, onSave, onClearData, saving, 
           <input
             value={settings.apiBaseUrl}
             onChange={(event) => update("apiBaseUrl", event.target.value)}
-            placeholder="https://api.openai.com/v1"
+            placeholder="https://dashscope-intl.aliyuncs.com/compatible-mode/v1"
           />
         </label>
         <label>
@@ -99,7 +99,7 @@ export function SettingsForm({ settings, onChange, onSave, onClearData, saving, 
           <input
             value={settings.modelName}
             onChange={(event) => update("modelName", event.target.value)}
-            placeholder="gpt-4o-mini"
+            placeholder="qwen3-vl-flash"
           />
         </label>
         <label className="check-line">
@@ -108,14 +108,14 @@ export function SettingsForm({ settings, onChange, onSave, onClearData, saving, 
             checked={settings.useResponseFormat}
             onChange={(event) => update("useResponseFormat", event.target.checked)}
           />
-          请求严格 JSON response_format
+          Request strict JSON response_format
         </label>
       </section>
 
       <section className="settings-section">
-        <h2>请求与图片</h2>
+        <h2>Request and Image</h2>
         <label>
-          最大请求超时（毫秒）
+          Request timeout in ms
           <input
             type="number"
             min={2000}
@@ -125,7 +125,7 @@ export function SettingsForm({ settings, onChange, onSave, onClearData, saving, 
           />
         </label>
         <label>
-          图片压缩质量：{settings.imageQuality.toFixed(2)}
+          Image quality: {settings.imageQuality.toFixed(2)}
           <input
             type="range"
             min={0.35}
@@ -138,14 +138,14 @@ export function SettingsForm({ settings, onChange, onSave, onClearData, saving, 
       </section>
 
       <section className="settings-section">
-        <h2>本地学习</h2>
+        <h2>Local Learning</h2>
         <label className="check-line">
           <input
             type="checkbox"
             checked={settings.enableHistoryRetrieval}
             onChange={(event) => update("enableHistoryRetrieval", event.target.checked)}
           />
-          启用历史案例检索
+          Enable learned-rule retrieval
         </label>
         <label className="check-line">
           <input
@@ -153,17 +153,17 @@ export function SettingsForm({ settings, onChange, onSave, onClearData, saving, 
             checked={settings.enableDebugLogs}
             onChange={(event) => update("enableDebugLogs", event.target.checked)}
           />
-          启用调试日志
+          Enable debug logs
         </label>
       </section>
 
       <div className="settings-actions">
         <button className="primary-button" type="submit" disabled={saving}>
-          {saving ? "保存中..." : "保存设置"}
+          {saving ? "Saving..." : "Save settings"}
         </button>
         <button className="danger-button" type="button" onClick={onClearData}>
           <Trash2 size={16} />
-          清空本地数据
+          Clear local data
         </button>
       </div>
       {status ? <p className="status-text">{status}</p> : null}

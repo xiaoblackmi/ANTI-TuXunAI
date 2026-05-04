@@ -25,7 +25,7 @@ Bootstrap this machine with:
 npm run setup:machine
 ```
 
-This installs dependencies, runs `typecheck`, runs a production build, and checks whether GitHub CLI is available.
+This installs dependencies, runs `typecheck`, runs tests, runs a production build, and checks whether GitHub CLI is available.
 
 ## Install
 
@@ -116,6 +116,7 @@ This MVP does not train a model. It implements local continuous learning through
 
 ```bash
 npm run setup:machine
+npm run test
 npm run typecheck
 npm run build
 ```

@@ -15,6 +15,9 @@ npm install
 Write-Host "Running typecheck..."
 npm run typecheck
 
+Write-Host "Running tests..."
+npm run test
+
 Write-Host "Running build..."
 npm run build
 

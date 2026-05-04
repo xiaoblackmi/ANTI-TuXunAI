@@ -51,6 +51,18 @@ export async function saveGameCase(gameCase: GameCase): Promise<void> {
   await db.cases.put(gameCase);
 }
 
+export async function getRecentGameCases(limit = 20): Promise<GameCase[]> {
+  return db.cases.orderBy("createdAt").reverse().limit(limit).toArray();
+}
+
+export async function updateGameCaseUsefulness(id: string, isUseful: boolean): Promise<void> {
+  await db.cases.update(id, { isUseful });
+}
+
+export async function deleteGameCase(id: string): Promise<void> {
+  await db.cases.delete(id);
+}
+
 export async function saveLearnedRules(rules: LearnedRule[]): Promise<void> {
   if (rules.length === 0) return;
   await db.learnedRules.bulkPut(rules);
@@ -58,4 +70,16 @@ export async function saveLearnedRules(rules: LearnedRule[]): Promise<void> {
 
 export async function getRecentLearnedRules(limit = 8): Promise<LearnedRule[]> {
   return db.learnedRules.orderBy("createdAt").reverse().limit(limit).toArray();
+}
+
+export async function getAllLearnedRules(limit = 50): Promise<LearnedRule[]> {
+  return db.learnedRules.orderBy("createdAt").reverse().limit(limit).toArray();
+}
+
+export async function saveLearnedRule(rule: LearnedRule): Promise<void> {
+  await db.learnedRules.put(rule);
+}
+
+export async function deleteLearnedRule(id: string): Promise<void> {
+  await db.learnedRules.delete(id);
 }

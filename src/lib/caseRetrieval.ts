@@ -18,10 +18,11 @@ export async function retrieveRelevantRules(
   const normalizedTags = normalizeList(query.tags);
   const normalizedKeywords = normalizeList(query.keywords);
 
-  const scored = rules
-    .map((rule) => ({ rule, score: scoreRule(rule, normalizedCountries, normalizedTags, normalizedKeywords) }))
-    .filter((item) => item.score > 0)
-    .sort((a, b) => b.score - a.score || b.rule.createdAt.localeCompare(a.rule.createdAt));
+  const scored = rankLearnedRules(rules, {
+    countries: normalizedCountries,
+    tags: normalizedTags,
+    keywords: normalizedKeywords
+  });
 
   if (scored.length === 0) {
     return getRecentLearnedRules(limit);
@@ -34,7 +35,17 @@ export async function embeddingSearch(): Promise<LearnedRule[]> {
   return [];
 }
 
-function scoreRule(rule: LearnedRule, countries: string[], tags: string[], keywords: string[]): number {
+export function rankLearnedRules(
+  rules: LearnedRule[],
+  query: Required<RuleRetrievalQuery>
+): Array<{ rule: LearnedRule; score: number }> {
+  return rules
+    .map((rule) => ({ rule, score: scoreRule(rule, query.countries, query.tags, query.keywords) }))
+    .filter((item) => item.score > 0)
+    .sort((a, b) => b.score - a.score || b.rule.createdAt.localeCompare(a.rule.createdAt));
+}
+
+export function scoreRule(rule: LearnedRule, countries: string[], tags: string[], keywords: string[]): number {
   const haystack = normalizeText(
     [rule.title, rule.ruleText, rule.country, rule.region, ...rule.tags].filter(Boolean).join(" ")
   );

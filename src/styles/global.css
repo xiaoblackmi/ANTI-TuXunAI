@@ -321,6 +321,90 @@ button {
   padding: 20px;
 }
 
+.local-data-panel {
+  display: grid;
+  gap: 14px;
+  margin-top: 18px;
+  padding: 20px;
+  background: #ffffff;
+  border: 1px solid #dce4da;
+  border-radius: 8px;
+}
+
+.section-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.section-head h2 {
+  margin: 2px 0 0;
+  color: #10231f;
+  font-size: 18px;
+  line-height: 1.2;
+}
+
+.data-tabs {
+  width: 100%;
+}
+
+.data-list,
+.rule-editor {
+  display: grid;
+  gap: 10px;
+}
+
+.data-item {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 14px;
+  align-items: start;
+  padding: 12px;
+  background: #f7f9f5;
+  border: 1px solid #e1e8df;
+  border-radius: 8px;
+}
+
+.data-item h3 {
+  margin: 0;
+  color: #10231f;
+  font-size: 14px;
+}
+
+.data-item p {
+  margin: 5px 0;
+  color: #40554b;
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.data-item small,
+.muted-text {
+  color: #6a7a72;
+  font-size: 12px;
+}
+
+.item-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.item-actions .secondary-button,
+.item-actions .primary-button {
+  min-height: 32px;
+  padding: 0 10px;
+  font-size: 12px;
+}
+
+.danger-icon {
+  color: #8b1d1d;
+  background: #fff4f2;
+  border-color: #f2c5bd;
+}
+
 .settings-section {
   display: grid;
   gap: 12px;
@@ -453,5 +537,13 @@ textarea:focus {
 
   .field-grid {
     grid-template-columns: 1fr;
+  }
+
+  .data-item {
+    grid-template-columns: 1fr;
+  }
+
+  .item-actions {
+    justify-content: flex-start;
   }
 }

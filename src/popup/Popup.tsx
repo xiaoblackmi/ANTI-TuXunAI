@@ -35,12 +35,12 @@ export function Popup() {
   async function analyzeCurrentView() {
     setLoading(true);
     setError("");
-    setStatus("正在截图并压缩画面...");
+    setStatus("Capturing and compressing the visible view...");
 
     try {
       const currentSettings = settings ?? (await getSettings());
       if (!currentSettings.apiKey.trim()) {
-        throw new Error("请先在 Options 中配置 API Key。");
+        throw new Error("Configure the API Key in Options first.");
       }
 
       const screenshot = await captureCurrentTab();
@@ -48,7 +48,7 @@ export function Popup() {
       const compressed = await compressImage(screenshot, maxSize, currentSettings.imageQuality);
       const screenshotHash = await sha256Text(compressed.slice(0, 200000));
 
-      setStatus("正在读取本地经验规则...");
+      setStatus("Reading local learned rules...");
       const learnedRules = currentSettings.enableHistoryRetrieval
         ? mode === "fast"
           ? await getRecentLearnedRules(5)
@@ -56,7 +56,7 @@ export function Popup() {
         : [];
 
       const prompt = mode === "fast" ? buildFastGeoPrompt(learnedRules) : buildDetailedGeoPrompt(learnedRules);
-      setStatus(mode === "fast" ? "正在快速判断..." : "正在精准分析...");
+      setStatus(mode === "fast" ? "Running fast analysis..." : "Running detailed analysis...");
 
       const response = await callVisionModel(compressed, prompt, {
         apiBaseUrl: currentSettings.apiBaseUrl,
@@ -69,7 +69,7 @@ export function Popup() {
       });
 
       if (!response.ok || !response.data) {
-        throw new Error(response.error || "模型返回为空。");
+        throw new Error(response.error || "The model returned an empty response.");
       }
 
       const nextAnalysis: LastAnalysis = {
@@ -84,12 +84,12 @@ export function Popup() {
       setLastAnalysis(nextAnalysis);
       try {
         await showFloatingPanel(nextAnalysis.result);
-        setStatus("分析完成，已更新页面浮窗。");
+        setStatus("Analysis complete. Floating panel updated.");
       } catch {
-        setStatus("分析完成。当前页面不支持注入浮窗时，可直接在 Popup 查看结果。");
+        setStatus("Analysis complete. The current page cannot inject the floating panel, so use the popup result.");
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : "分析失败。");
+      setError(err instanceof Error ? err.message : "Analysis failed.");
       setStatus("");
     } finally {
       setLoading(false);
@@ -103,7 +103,7 @@ export function Popup() {
   async function copyResult() {
     if (!lastAnalysis) return;
     await navigator.clipboard.writeText(JSON.stringify(lastAnalysis.result, null, 2));
-    setStatus("已复制分析结果。");
+    setStatus("Analysis copied.");
   }
 
   return (
@@ -112,25 +112,25 @@ export function Popup() {
         <div>
           <span className="eyebrow">Street View Trainer</span>
           <h1>Geo AI Assistant</h1>
-          <p>只分析当前可见画面，保存本地复盘经验。</p>
+          <p>Analyze the visible view and keep review notes locally.</p>
         </div>
-        <button className="icon-button" type="button" onClick={openOptions} title="打开设置">
+        <button className="icon-button" type="button" onClick={openOptions} title="Open options">
           <ExternalLink size={17} />
         </button>
       </header>
 
       <section className="toolbar">
-        <div className="mode-toggle" role="group" aria-label="分析模式">
+        <div className="mode-toggle" role="group" aria-label="Analysis mode">
           <button className={mode === "fast" ? "active" : ""} type="button" onClick={() => setMode("fast")}>
-            快速模式
+            Fast
           </button>
           <button className={mode === "detailed" ? "active" : ""} type="button" onClick={() => setMode("detailed")}>
-            精准模式
+            Detailed
           </button>
         </div>
         <button className="primary-button" type="button" disabled={loading} onClick={analyzeCurrentView}>
           {loading ? <Loader2 size={17} /> : <Compass size={17} />}
-          {loading ? "分析中..." : "分析当前街景"}
+          {loading ? "Analyzing..." : "Analyze visible street view"}
         </button>
       </section>
 
@@ -141,7 +141,7 @@ export function Popup() {
 
       <div className="popup-footer">
         <button className="secondary-button" type="button" disabled={!lastAnalysis} onClick={() => setShowFeedback(true)}>
-          本局结束后复盘
+          Review round
         </button>
         <button
           className="secondary-button"
@@ -150,11 +150,11 @@ export function Popup() {
           onClick={() =>
             lastAnalysis &&
             showFloatingPanel(lastAnalysis.result).catch(() => {
-              setError("当前页面不支持注入浮窗。");
+              setError("The current page does not allow floating-panel injection.");
             })
           }
         >
-          显示浮窗
+          Show panel
         </button>
       </div>
 
@@ -189,7 +189,7 @@ function normalizeAnalysisResult(result: LastAnalysis["result"]): LastAnalysis["
     top_predictions: Array.isArray(result.top_predictions) ? result.top_predictions.slice(0, 3) : [],
     estimated_location: result.estimated_location ?? { lat: null, lng: null, radius_km: 500 },
     clues: Array.isArray(result.clues) ? result.clues : [],
-    fast_answer: result.fast_answer || result.top_predictions?.[0]?.country || "无法判断",
+    fast_answer: result.fast_answer || result.top_predictions?.[0]?.country || "Unknown",
     detailed_reasoning: result.detailed_reasoning || "",
     next_observation_suggestions: Array.isArray(result.next_observation_suggestions)
       ? result.next_observation_suggestions

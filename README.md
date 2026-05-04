@@ -25,7 +25,7 @@ Bootstrap this machine with:
 npm run setup:machine
 ```
 
-This installs dependencies, runs `typecheck`, runs tests, runs a production build, and checks whether GitHub CLI is available.
+This installs dependencies, runs `typecheck`, runs tests, runs a production build, validates the extension package, and checks whether GitHub CLI is available.
 
 ## Install
 
@@ -113,6 +113,7 @@ This MVP does not train a model. It implements local continuous learning through
 - `LearnedRule` stores short reusable correction rules.
 - Future analysis reads the most recent or most relevant rules and includes them in the prompt.
 - The Options page includes a Local Library for viewing cases and learned rules, editing/deleting rules, marking cases useful, and importing/exporting rules as JSON.
+- The Local Library can export and restore a full local backup containing settings, saved cases, and learned rules.
 - `embeddingSearch()` is reserved for future vector search integration.
 
 Detailed Mode uses the previous analysis, when available, to retrieve more relevant learned rules by country, clue type, and extracted keywords.
@@ -128,7 +129,10 @@ Implemented:
 - Local IndexedDB settings, cases, learned rules, and review learning flow.
 - Local Library management for cases and learned rules.
 - Learned-rule import/export.
+- Full local backup export/restore.
 - API smoke test from Options.
+- Extension package validation for manifest paths and self-contained content script output.
+- GitHub Actions CI for install, typecheck, tests, build, and extension package validation.
 - Tests for JSON parsing, prompt rule injection, rule ranking, and query extraction.
 
 Still manual:
@@ -144,6 +148,7 @@ npm run setup:machine
 npm run test
 npm run typecheck
 npm run build
+npm run validate:extension
 ```
 
 ## Notes

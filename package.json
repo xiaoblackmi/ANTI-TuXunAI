@@ -13,6 +13,7 @@
     "preview": "vite preview",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
+    "validate:extension": "node scripts/validate-extension.mjs",
     "setup:machine": "powershell -ExecutionPolicy Bypass -File ./scripts/setup-machine.ps1"
   },
   "dependencies": {

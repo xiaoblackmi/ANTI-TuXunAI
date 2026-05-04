@@ -55,6 +55,10 @@ export async function getRecentGameCases(limit = 20): Promise<GameCase[]> {
   return db.cases.orderBy("createdAt").reverse().limit(limit).toArray();
 }
 
+export async function getAllGameCases(limit = 200): Promise<GameCase[]> {
+  return db.cases.orderBy("createdAt").reverse().limit(limit).toArray();
+}
+
 export async function updateGameCaseUsefulness(id: string, isUseful: boolean): Promise<void> {
   await db.cases.update(id, { isUseful });
 }
@@ -82,4 +86,31 @@ export async function saveLearnedRule(rule: LearnedRule): Promise<void> {
 
 export async function deleteLearnedRule(id: string): Promise<void> {
   await db.learnedRules.delete(id);
+}
+
+export interface LocalBackup {
+  schemaVersion: 1;
+  exportedAt: string;
+  settings: AppSettings;
+  cases: GameCase[];
+  learnedRules: LearnedRule[];
+}
+
+export async function createLocalBackup(): Promise<LocalBackup> {
+  const [settings, cases, learnedRules] = await Promise.all([getSettings(), getAllGameCases(), getAllLearnedRules(500)]);
+  return {
+    schemaVersion: 1,
+    exportedAt: new Date().toISOString(),
+    settings,
+    cases,
+    learnedRules
+  };
+}
+
+export async function restoreLocalBackup(backup: LocalBackup): Promise<void> {
+  await db.transaction("rw", db.cases, db.learnedRules, db.settings, async () => {
+    await db.settings.put({ ...backup.settings, id: "app" });
+    if (backup.cases.length) await db.cases.bulkPut(backup.cases);
+    if (backup.learnedRules.length) await db.learnedRules.bulkPut(backup.learnedRules);
+  });
 }

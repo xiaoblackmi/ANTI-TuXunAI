@@ -21,6 +21,9 @@ npm run test
 Write-Host "Running build..."
 npm run build
 
+Write-Host "Validating extension package..."
+npm run validate:extension
+
 $ghCandidates = @(
   "gh",
   "C:\Program Files\GitHub CLI\gh.exe"

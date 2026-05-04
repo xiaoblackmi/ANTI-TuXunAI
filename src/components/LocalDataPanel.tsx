@@ -1,10 +1,12 @@
 import { Download, RefreshCw, Save, Trash2, Upload } from "lucide-react";
 import { useRef, useEffect, useState } from "react";
 import {
+  createLocalBackup,
   deleteGameCase,
   deleteLearnedRule,
   getAllLearnedRules,
   getRecentGameCases,
+  restoreLocalBackup,
   saveLearnedRule,
   updateGameCaseUsefulness
 } from "../lib/storage";
@@ -20,6 +22,7 @@ export function LocalDataPanel() {
   const [draftRule, setDraftRule] = useState<LearnedRule | null>(null);
   const [status, setStatus] = useState("");
   const importInputRef = useRef<HTMLInputElement | null>(null);
+  const restoreInputRef = useRef<HTMLInputElement | null>(null);
 
   useEffect(() => {
     void refresh();
@@ -69,13 +72,7 @@ export function LocalDataPanel() {
 
   function exportRules() {
     const payload = JSON.stringify({ exportedAt: new Date().toISOString(), learnedRules: rules }, null, 2);
-    const blob = new Blob([payload], { type: "application/json" });
-    const url = URL.createObjectURL(blob);
-    const anchor = document.createElement("a");
-    anchor.href = url;
-    anchor.download = `geo-ai-learned-rules-${new Date().toISOString().slice(0, 10)}.json`;
-    anchor.click();
-    URL.revokeObjectURL(url);
+    downloadText(payload, `geo-ai-learned-rules-${new Date().toISOString().slice(0, 10)}.json`);
     setStatus(`Exported ${rules.length} rule(s).`);
   }
 
@@ -94,6 +91,27 @@ export function LocalDataPanel() {
       setStatus(error instanceof Error ? `Import failed: ${error.message}` : "Import failed.");
     } finally {
       if (importInputRef.current) importInputRef.current.value = "";
+    }
+  }
+
+  async function exportBackup() {
+    const backup = await createLocalBackup();
+    downloadJson(backup, `geo-ai-backup-${new Date().toISOString().slice(0, 10)}.json`);
+    setStatus(`Exported backup with ${backup.cases.length} case(s) and ${backup.learnedRules.length} rule(s).`);
+  }
+
+  async function restoreBackup(file: File | undefined) {
+    if (!file) return;
+    try {
+      const parsed = JSON.parse(await file.text()) as unknown;
+      const backup = normalizeBackup(parsed);
+      await restoreLocalBackup(backup);
+      setStatus(`Restored ${backup.cases.length} case(s) and ${backup.learnedRules.length} rule(s).`);
+      await refresh();
+    } catch (error) {
+      setStatus(error instanceof Error ? `Restore failed: ${error.message}` : "Restore failed.");
+    } finally {
+      if (restoreInputRef.current) restoreInputRef.current.value = "";
     }
   }
 
@@ -118,12 +136,27 @@ export function LocalDataPanel() {
           <Upload size={16} />
           Import rules
         </button>
+        <button className="secondary-button" type="button" onClick={() => void exportBackup()}>
+          <Download size={16} />
+          Export backup
+        </button>
+        <button className="secondary-button" type="button" onClick={() => restoreInputRef.current?.click()}>
+          <Upload size={16} />
+          Restore backup
+        </button>
         <input
           ref={importInputRef}
           type="file"
           accept="application/json,.json"
           className="visually-hidden"
           onChange={(event) => void importRules(event.target.files?.[0])}
+        />
+        <input
+          ref={restoreInputRef}
+          type="file"
+          accept="application/json,.json"
+          className="visually-hidden"
+          onChange={(event) => void restoreBackup(event.target.files?.[0])}
         />
       </div>
 
@@ -260,7 +293,7 @@ function normalizeCsv(value: string): string[] {
     .filter(Boolean);
 }
 
-function normalizeImportedRules(input: unknown): LearnedRule[] {
+function normalizeImportedRules(input: unknown, options: { allowEmpty?: boolean } = {}): LearnedRule[] {
   const rawRules = Array.isArray(input)
     ? input
     : isRecord(input) && Array.isArray(input.learnedRules)
@@ -287,7 +320,7 @@ function normalizeImportedRules(input: unknown): LearnedRule[] {
     ];
   });
 
-  if (rules.length === 0) {
+  if (rules.length === 0 && !options.allowEmpty) {
     throw new Error("No valid learned rules found.");
   }
 
@@ -296,4 +329,57 @@ function normalizeImportedRules(input: unknown): LearnedRule[] {
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null;
+}
+
+function downloadJson(value: unknown, filename: string) {
+  downloadText(JSON.stringify(value, null, 2), filename);
+}
+
+function downloadText(text: string, filename: string) {
+  const blob = new Blob([text], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+  const anchor = document.createElement("a");
+  anchor.href = url;
+  anchor.download = filename;
+  anchor.click();
+  URL.revokeObjectURL(url);
+}
+
+function normalizeBackup(input: unknown) {
+  if (!isRecord(input) || input.schemaVersion !== 1) {
+    throw new Error("Unsupported backup format.");
+  }
+  if (!isRecord(input.settings)) {
+    throw new Error("Backup is missing settings.");
+  }
+  return {
+    schemaVersion: 1 as const,
+    exportedAt: typeof input.exportedAt === "string" ? input.exportedAt : new Date().toISOString(),
+    settings: {
+      id: "app" as const,
+      apiBaseUrl: typeof input.settings.apiBaseUrl === "string" ? input.settings.apiBaseUrl : "",
+      apiKey: typeof input.settings.apiKey === "string" ? input.settings.apiKey : "",
+      modelName: typeof input.settings.modelName === "string" ? input.settings.modelName : "qwen3-vl-flash",
+      timeoutMs: typeof input.settings.timeoutMs === "number" ? input.settings.timeoutMs : 5000,
+      imageQuality: typeof input.settings.imageQuality === "number" ? input.settings.imageQuality : 0.82,
+      useResponseFormat: input.settings.useResponseFormat !== false,
+      enableHistoryRetrieval: input.settings.enableHistoryRetrieval !== false,
+      enableDebugLogs: input.settings.enableDebugLogs === true
+    },
+    cases: Array.isArray(input.cases) ? input.cases.filter(isGameCaseLike) : [],
+    learnedRules: Array.isArray(input.learnedRules) ? normalizeImportedRules(input.learnedRules, { allowEmpty: true }) : []
+  };
+}
+
+function isGameCaseLike(value: unknown): value is GameCase {
+  return (
+    isRecord(value) &&
+    typeof value.id === "string" &&
+    typeof value.createdAt === "string" &&
+    typeof value.screenshotHash === "string" &&
+    typeof value.correctCountry === "string" &&
+    Array.isArray(value.tags) &&
+    typeof value.modelName === "string" &&
+    typeof value.isUseful === "boolean"
+  );
 }

@@ -127,9 +127,9 @@ export function SettingsForm({
 
       <section className="settings-section">
         <h2>StreetCLIP 快速模式</h2>
-        <p className="muted-text">快速模式使用 Hugging Face 上的 StreetCLIP，只做国家候选粗筛，不调用 Qwen。</p>
+        <p className="muted-text">快速模式使用 Hugging Face 的 StreetCLIP 推理接口，只做国家候选粗筛，不调用 Qwen。</p>
         <label>
-          Hugging Face Router URL
+          Hugging Face Inference URL
           <input value={settings.streetClipApiBaseUrl} onChange={(event) => update("streetClipApiBaseUrl", event.target.value)} />
         </label>
         <label>

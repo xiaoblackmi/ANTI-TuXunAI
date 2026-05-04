@@ -58,14 +58,14 @@ npm run build
   - API Key
   - Model Name，默认 `qwen3-vl-flash`
 - `StreetCLIP 快速模式`
-  - Hugging Face Router URL，默认 `https://router.huggingface.co/hf-inference/models/geolocal/StreetCLIP`
+  - Hugging Face Inference URL，默认 `https://api-inference.huggingface.co/models/geolocal/StreetCLIP`
   - Hugging Face Token
   - StreetCLIP 模型名，默认 `geolocal/StreetCLIP`
 
 插件会调用：
 
 - Qwen 精准模式：`{API Base URL}/chat/completions`
-- StreetCLIP 快速模式：Hugging Face Inference API
+- StreetCLIP 快速模式：Hugging Face Inference API；如果公共路由报 400，插件会自动回退到兼容的 legacy 入口
 
 ## 使用
 

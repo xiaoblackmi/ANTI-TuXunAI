@@ -29,40 +29,46 @@ export async function callStreetClipZeroShot(
     };
   }
 
-  const endpoint = options.apiBaseUrl.replace(/\/+$/, "");
+  const endpoint = normalizeStreetClipEndpoint(options.apiBaseUrl, options.modelName);
   const controller = new AbortController();
   const timeout = window.setTimeout(() => controller.abort(), options.timeoutMs);
   const base64Image = extractBase64Image(imageDataUrl);
 
   try {
-    const response = await fetch(endpoint, {
-      method: "POST",
-      signal: controller.signal,
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${options.apiKey}`
-      },
-      body: JSON.stringify({
-        inputs: base64Image,
-        parameters: {
-          candidate_labels: options.candidateLabels,
-          hypothesis_template: options.hypothesisTemplate ?? "This is a street-view scene from {}.",
-          top_k: options.topK ?? 3
-        },
-        options: {
-          wait_for_model: true,
-          use_cache: true
-        }
-      })
-    });
-
+    const response = await postZeroShotRequest(endpoint, base64Image, options, controller.signal);
     const rawText = await response.text();
     if (!response.ok) {
+      if (shouldRetryWithLegacyInference(endpoint, response.status, rawText)) {
+        const legacyEndpoint = toLegacyInferenceEndpoint(endpoint, options.modelName);
+        const fallbackResponse = await postZeroShotRequest(legacyEndpoint, base64Image, options, controller.signal);
+        const fallbackText = await fallbackResponse.text();
+        if (!fallbackResponse.ok) {
+          return {
+            ok: false,
+            data: null,
+            rawText: fallbackText,
+            error: buildStreetClipError(fallbackResponse.status, fallbackResponse.statusText, fallbackText)
+          };
+        }
+
+        const fallbackParsed = parseStreetClipScores(fallbackText);
+        if (!fallbackParsed.ok) {
+          return {
+            ok: false,
+            data: null,
+            rawText: fallbackText,
+            error: fallbackParsed.error
+          };
+        }
+
+        return { ok: true, data: fallbackParsed.data, rawText: fallbackText };
+      }
+
       return {
         ok: false,
         data: null,
         rawText,
-        error: `StreetCLIP 请求失败：${response.status} ${response.statusText}`
+        error: buildStreetClipError(response.status, response.statusText, rawText)
       };
     }
 
@@ -159,6 +165,71 @@ function normalizeScores(value: unknown): StreetClipScore[] {
 function extractBase64Image(dataUrl: string): string {
   const match = dataUrl.match(/^data:[^;]+;base64,(.+)$/);
   return match ? match[1] : dataUrl;
+}
+
+function postZeroShotRequest(
+  endpoint: string,
+  base64Image: string,
+  options: StreetClipOptions,
+  signal: AbortSignal
+): Promise<Response> {
+  return fetch(endpoint, {
+    method: "POST",
+    signal,
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${options.apiKey}`
+    },
+    body: JSON.stringify({
+      inputs: base64Image,
+      parameters: {
+        candidate_labels: options.candidateLabels,
+        hypothesis_template: options.hypothesisTemplate ?? "This is a street-view scene from {}.",
+        top_k: options.topK ?? 3
+      },
+      options: {
+        wait_for_model: true,
+        use_cache: true
+      }
+    })
+  });
+}
+
+function normalizeStreetClipEndpoint(baseUrl: string, modelName: string): string {
+  const trimmed = baseUrl.trim().replace(/\/+$/, "");
+  if (!trimmed) return `https://api-inference.huggingface.co/models/${modelName}`;
+  if (trimmed.startsWith("http")) {
+    return trimmed.replace(
+      /^https:\/\/router\.huggingface\.co\/hf-inference\/models\//i,
+      "https://api-inference.huggingface.co/models/"
+    );
+  }
+  return `https://api-inference.huggingface.co/models/${trimmed}`;
+}
+
+function toLegacyInferenceEndpoint(endpoint: string, modelName: string): string {
+  if (!endpoint.includes("router.huggingface.co/hf-inference/models/")) return endpoint;
+  return endpoint.replace(
+    /^https:\/\/router\.huggingface\.co\/hf-inference\/models\//i,
+    "https://api-inference.huggingface.co/models/"
+  );
+}
+
+function shouldRetryWithLegacyInference(endpoint: string, status: number, rawText: string): boolean {
+  const text = rawText.toLowerCase();
+  return (
+    status === 400 &&
+    endpoint.includes("router.huggingface.co/hf-inference/models/") &&
+    (text.includes("not deployed") || text.includes("inference provider") || text.includes("provider support"))
+  );
+}
+
+function buildStreetClipError(status: number, statusText: string, rawText: string): string {
+  const normalizedText = rawText.trim();
+  if (status === 400 && /inference provider|not deployed|provider support/i.test(normalizedText)) {
+    return "StreetCLIP 公共路由不可用，已建议切换到 Hugging Face Inference API；如果仍失败，请填写你自己的部署 URL。";
+  }
+  return `StreetCLIP 请求失败：${status} ${statusText}`;
 }
 
 function clamp01(value: number): number {

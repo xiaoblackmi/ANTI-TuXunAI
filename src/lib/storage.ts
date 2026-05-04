@@ -6,7 +6,7 @@ export const DEFAULT_SETTINGS: AppSettings = {
   apiBaseUrl: "https://dashscope-intl.aliyuncs.com/compatible-mode/v1",
   apiKey: "",
   modelName: "qwen3-vl-flash",
-  streetClipApiBaseUrl: "https://router.huggingface.co/hf-inference/models/geolocal/StreetCLIP",
+  streetClipApiBaseUrl: "https://api-inference.huggingface.co/models/geolocal/StreetCLIP",
   streetClipApiKey: "",
   streetClipModelName: "geolocal/StreetCLIP",
   timeoutMs: 5000,

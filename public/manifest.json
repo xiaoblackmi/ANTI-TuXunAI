@@ -1,12 +1,12 @@
 {
   "manifest_version": 3,
-  "name": "GeoGuessr AI Assistant",
+  "name": "图寻 AI 助手",
   "version": "0.1.0",
-  "description": "Personal street-view observation and review trainer. Analyzes only the visible page screenshot.",
+  "description": "个人街景观察与复盘训练工具，只分析当前可见页面截图。",
   "permissions": ["activeTab", "tabs", "scripting", "storage"],
   "host_permissions": ["<all_urls>"],
   "action": {
-    "default_title": "GeoGuessr AI Assistant",
+    "default_title": "图寻 AI 助手",
     "default_popup": "src/popup/popup.html"
   },
   "options_page": "src/options/options.html",

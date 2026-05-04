@@ -25,11 +25,11 @@ export function FeedbackModal({ lastAnalysis, onClose, onSaved }: FeedbackModalP
   async function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
     if (!correctCountry.trim()) {
-      setError("Enter the correct country or region.");
+      setError("请填写正确国家或地区。");
       return;
     }
     if (!lastAnalysis) {
-      setError("There is no recent analysis to review.");
+      setError("没有可复盘的最近分析，请先分析一次。");
       return;
     }
 
@@ -75,7 +75,7 @@ export function FeedbackModal({ lastAnalysis, onClose, onSaved }: FeedbackModalP
           const learnedRules: LearnedRule[] = learning.data.rules.slice(0, 3).map((rule) => ({
             id: crypto.randomUUID(),
             createdAt: new Date().toISOString(),
-            title: rule.title || "Review rule",
+            title: rule.title || "复盘规则",
             ruleText: rule.ruleText,
             country: rule.country || gameCase.correctCountry,
             region: rule.region || gameCase.correctRegion,
@@ -88,10 +88,10 @@ export function FeedbackModal({ lastAnalysis, onClose, onSaved }: FeedbackModalP
         }
       }
 
-      onSaved(learnedCount ? `Saved review and learned ${learnedCount} rule(s).` : "Saved review.");
+      onSaved(learnedCount ? `已保存复盘，并学习 ${learnedCount} 条经验规则。` : "已保存复盘。");
       onClose();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to save review.");
+      setError(err instanceof Error ? err.message : "保存复盘失败。");
     } finally {
       setSaving(false);
     }
@@ -106,43 +106,43 @@ export function FeedbackModal({ lastAnalysis, onClose, onSaved }: FeedbackModalP
       <form className="feedback-modal" onSubmit={handleSubmit}>
         <header>
           <div>
-            <span className="eyebrow">Round Review</span>
-            <h2>Save correction</h2>
+            <span className="eyebrow">学习反馈</span>
+            <h2>复盘本局</h2>
           </div>
           <button type="button" className="ghost-button" onClick={onClose}>
-            Close
+            关闭
           </button>
         </header>
 
         <label>
-          AI guessed country
+          AI 猜测国家/地区
           <input value={lastAnalysis?.result.top_predictions[0]?.country ?? ""} readOnly />
         </label>
         <label>
-          Correct country or region
-          <input value={correctCountry} onChange={(event) => setCorrectCountry(event.target.value)} placeholder="Czechia" />
+          正确国家/地区
+          <input value={correctCountry} onChange={(event) => setCorrectCountry(event.target.value)} placeholder="例如：捷克" />
         </label>
         <label>
-          Correct city or area
-          <input value={correctRegion} onChange={(event) => setCorrectRegion(event.target.value)} placeholder="South Moravia" />
+          正确城市/区域（可选）
+          <input value={correctRegion} onChange={(event) => setCorrectRegion(event.target.value)} placeholder="例如：南摩拉维亚" />
         </label>
         <div className="field-grid">
           <label>
-            Latitude
+            纬度（可选）
             <input value={correctLat} onChange={(event) => setCorrectLat(event.target.value)} inputMode="decimal" />
           </label>
           <label>
-            Longitude
+            经度（可选）
             <input value={correctLng} onChange={(event) => setCorrectLng(event.target.value)} inputMode="decimal" />
           </label>
         </div>
         <label>
-          Correction note
+          纠错说明
           <textarea
             value={userCorrectionText}
             onChange={(event) => setUserCorrectionText(event.target.value)}
             rows={4}
-            placeholder="Example: I confused Czech and Slovak warning signs; the road width and town signs mattered more."
+            placeholder="例如：这次把捷克误判成斯洛伐克，应该结合红边三角警示牌、村镇路牌和道路宽度一起判断。"
           />
         </label>
 
@@ -161,17 +161,17 @@ export function FeedbackModal({ lastAnalysis, onClose, onSaved }: FeedbackModalP
 
         <label className="check-line">
           <input type="checkbox" checked={isUseful} onChange={(event) => setIsUseful(event.target.checked)} />
-          Mark as useful
+          这条复盘有学习价值
         </label>
 
         {error ? <p className="error-text">{error}</p> : null}
 
         <footer>
           <button className="secondary-button" type="button" onClick={onClose}>
-            Cancel
+            取消
           </button>
           <button className="primary-button" type="submit" disabled={saving}>
-            {saving ? "Saving..." : "Save and learn"}
+            {saving ? "保存中..." : "保存并学习"}
           </button>
         </footer>
       </form>

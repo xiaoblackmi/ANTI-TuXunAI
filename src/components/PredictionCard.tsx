@@ -12,7 +12,7 @@ export function PredictionCard({ result, compact = false, onCopy }: PredictionCa
     return (
       <section className="empty-state">
         <Target size={22} />
-        <p>还没有分析结果。</p>
+        <p>还没有分析结果</p>
       </section>
     );
   }
@@ -38,7 +38,7 @@ export function PredictionCard({ result, compact = false, onCopy }: PredictionCa
           <div className="prediction-row" key={`${prediction.country}-${index}`}>
             <span className="rank">{index + 1}</span>
             <div>
-              <strong>{prediction.country}</strong>
+              <strong>{prediction.country || "未知"}</strong>
               {prediction.region ? <span>{prediction.region}</span> : null}
               <p>{prediction.reason}</p>
             </div>
@@ -53,7 +53,7 @@ export function PredictionCard({ result, compact = false, onCopy }: PredictionCa
           {location?.lat != null && location?.lng != null
             ? `${location.lat.toFixed(3)}, ${location.lng.toFixed(3)}`
             : "坐标不确定"}
-          {location?.radius_km ? ` · 半径约 ${location.radius_km} km` : ""}
+          {location?.radius_km ? ` | 半径约 ${location.radius_km} km` : ""}
         </span>
       </div>
 

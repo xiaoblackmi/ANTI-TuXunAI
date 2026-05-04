@@ -22,18 +22,18 @@ export function Options() {
       const sanitized = sanitizeSettings(settings);
       await saveSettings(sanitized);
       setSettings(sanitized);
-      setStatus("Settings saved.");
+      setStatus("设置已保存。");
     } finally {
       setSaving(false);
     }
   }
 
   async function handleClearData() {
-    const confirmed = window.confirm("Clear all local settings, cases, and learned rules? This cannot be undone.");
+    const confirmed = window.confirm("确定清空所有本地设置、案例和学习规则吗？此操作不可撤销。");
     if (!confirmed) return;
     await clearAllLocalData();
     setSettings(DEFAULT_SETTINGS);
-    setStatus("Local data cleared.");
+    setStatus("本地数据已清空。");
   }
 
   async function handleTestApi() {
@@ -58,12 +58,12 @@ export function Options() {
       );
 
       if (!response.ok || !response.data?.ok) {
-        throw new Error(response.error || "API test did not return the expected JSON.");
+        throw new Error(response.error || "API 测试没有返回预期 JSON。");
       }
 
-      setStatus("API test succeeded.");
+      setStatus("API 测试成功。");
     } catch (error) {
-      setStatus(error instanceof Error ? `API test failed: ${error.message}` : "API test failed.");
+      setStatus(error instanceof Error ? `API 测试失败：${error.message}` : "API 测试失败。");
     } finally {
       setTesting(false);
     }
@@ -74,9 +74,9 @@ export function Options() {
       <div className="options-main">
         <header className="app-header">
           <div>
-            <span className="eyebrow">Local Settings</span>
-            <h1>Geo AI Assistant Options</h1>
-            <p>API keys stay in browser storage. The extension does not read hidden game data or coordinates.</p>
+            <span className="eyebrow">本地设置</span>
+            <h1>图寻 AI 助手设置</h1>
+            <p>API Key 只保存在浏览器本地。插件不会读取隐藏答案、坐标或游戏平台内部数据。</p>
           </div>
         </header>
         <SettingsForm

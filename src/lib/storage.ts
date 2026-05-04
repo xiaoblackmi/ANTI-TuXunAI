@@ -7,7 +7,7 @@ export const DEFAULT_SETTINGS: AppSettings = {
   apiKey: "",
   modelName: "qwen3-vl-flash",
   timeoutMs: 5000,
-  imageQuality: 0.82,
+  imageQuality: 0.72,
   useResponseFormat: true,
   enableHistoryRetrieval: true,
   enableDebugLogs: false

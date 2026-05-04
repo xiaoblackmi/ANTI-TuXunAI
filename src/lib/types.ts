@@ -119,15 +119,15 @@ export interface FeedbackLearningResponse {
 }
 
 export const FEEDBACK_TAGS = [
-  "sign",
-  "road_marking",
-  "language",
-  "vegetation",
-  "architecture",
-  "utility_pole",
-  "license_plate",
-  "guardrail",
-  "road_surface",
-  "weather_climate",
-  "other"
+  "路牌",
+  "车道线",
+  "语言",
+  "植被",
+  "建筑",
+  "电线杆",
+  "车牌",
+  "护栏",
+  "路面",
+  "天气/气候",
+  "其他"
 ] as const;

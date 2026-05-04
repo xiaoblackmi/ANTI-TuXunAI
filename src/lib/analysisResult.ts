@@ -26,7 +26,7 @@ export function normalizeAnalysisResult(input: Partial<AnalysisResult> | null | 
       radius_km: normalizeRadius(input?.estimated_location?.radius_km)
     },
     clues: Array.isArray(input?.clues) ? input.clues.map(normalizeClue).filter(isPresent).slice(0, 10) : [],
-    fast_answer: normalizeString(input?.fast_answer) || predictions[0]?.country || "Unknown",
+    fast_answer: normalizeString(input?.fast_answer) || predictions[0]?.country || "未知",
     detailed_reasoning: normalizeString(input?.detailed_reasoning),
     next_observation_suggestions: normalizeStringArray(input?.next_observation_suggestions, 5),
     uncertainties: normalizeStringArray(input?.uncertainties, 5)

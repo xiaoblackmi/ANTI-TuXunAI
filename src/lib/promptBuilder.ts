@@ -1,22 +1,27 @@
 import type { GameCase, LearnedRule } from "./types";
 
 const GEO_KNOWLEDGE_FRAMEWORK = `
-You are a street-view geolocation training assistant. Use only the currently visible image. Do not use hidden coordinates, page internals, platform APIs, network responses, or invisible metadata.
+你是街景定位训练助手。只能根据当前可见截图判断，不能读取隐藏坐标、页面变量、平台接口、网络响应或不可见元数据。
 
-Observation framework:
-- Driving side: left-hand or right-hand traffic is only a supporting clue. Cross-check it with lane markings, shoulders, parked vehicles, and road layout.
-- Sign and language: identify scripts and sign shapes, but never claim to read text that is not visible.
-- Plates: long European plates, shorter American plates, front-plate presence, color blocks, and blur shape are weak clues.
-- Road markings: yellow center lines, white edge lines, double lines, dashed/solid combinations, shoulder width.
-- Vegetation and climate: tropical, temperate, dry, cold, mountain, coastal, or other visible environment cues.
-- Architecture: rural Europe, North American suburbs, Latin American towns, Southeast Asian roadside buildings, and other visible styles.
-- Utility poles: wood, concrete, overhead wire density, cross-arm shape.
-- Guardrails and posts: European bollards, Australia/New Zealand road markers, South American mountain-road rails.
-- Street-view quality and camera traits may be supporting evidence, but never the only evidence.
+重要约束：
+- 每次截图都是独立新题，不要延续上一张图或上一局的国家判断。
+- 历史学习规则只能作为弱提示，不能把过去的国家候选当成本题答案。
+- 不确定就明确写不确定，不要编造看不清的文字、车牌或路牌。
+
+观察方向：
+- 行驶方向：左行/右行只能作为辅助线索，要结合车道、停靠车辆、路肩判断。
+- 路牌和语言：看文字体系、路牌颜色、形状、道路编号样式，但不要声称看到了不存在的字。
+- 车牌：欧洲长条牌、美洲短牌、是否有前牌、颜色块和模糊形态都只是弱线索。
+- 道路标线：黄中线、白边线、双白线、虚实线、路肩宽度。
+- 植被气候：热带、温带、干旱、寒冷、山地、海岸等可见环境。
+- 建筑风格：欧洲乡村、北美郊区、拉美城镇、东南亚路边建筑等。
+- 电线杆：木杆、水泥杆、横担形态、架空线密度。
+- 护栏和路桩：欧洲 bollard、澳新路标、南美山路护栏等。
+- 街景画质和相机特征只能作为辅助证据，不能作为唯一依据。
 `.trim();
 
 const RESULT_SCHEMA = `
-Return strict JSON only. It must be parseable by JSON.parse. Do not return Markdown or code fences:
+只返回严格 JSON，必须能被 JSON.parse 解析。不要 Markdown，不要代码块：
 {
   "top_predictions": [
     {
@@ -50,14 +55,14 @@ export function buildFastGeoPrompt(learnedRules: LearnedRule[]): string {
   return `
 ${GEO_KNOWLEDGE_FRAMEWORK}
 
-Task: quickly estimate the most likely country or region from the visible street-view image. Target response time is 2-5 seconds.
-Requirements:
-- Return exactly the top 3 country or region candidates when possible.
-- Keep each reason to one sentence.
-- Return at most 5 clues.
-- Keep detailed_reasoning under 80 words.
-- Return at most 2 next_observation_suggestions.
-- If uncertain, say so. Do not invent text, coordinates, or hidden metadata.
+任务：快速判断当前截图最可能的国家/地区，目标 2-5 秒。
+输出要求：
+- top_predictions 最多 3 个。
+- clues 最多 4 条，只写最关键可见线索。
+- 每个 reason 一句话。
+- detailed_reasoning 不超过 50 个中文字。
+- next_observation_suggestions 最多 2 条。
+- 坐标证据不足时 lat/lng 用 null，radius_km 放大。
 
 ${formatLearnedRules(learnedRules)}
 
@@ -69,13 +74,13 @@ export function buildDetailedGeoPrompt(learnedRules: LearnedRule[]): string {
   return `
 ${GEO_KNOWLEDGE_FRAMEWORK}
 
-Task: analyze visible street-view geolocation clues and provide country/region candidates, approximate coordinate range, confidence, evidence, and next observation suggestions.
-Requirements:
-- Return 3 top_predictions.
-- Return 6-10 clues, prioritizing reusable clues that help future rounds.
-- If there is not enough evidence for coordinates, use null for lat/lng and increase radius_km.
-- Keep the answer concise. Every conclusion must tie back to visible evidence.
-- Put meaningful doubts in uncertainties.
+任务：基于当前截图做较完整的街景定位推理，给出国家/地区候选、可能坐标范围、置信度、依据和下一步观察建议。
+输出要求：
+- top_predictions 固定 3 个。
+- clues 6-8 条，优先写能复用到以后判断的线索。
+- 结论必须绑定可见证据；证据不足时要写进 uncertainties。
+- 坐标不确定时 lat/lng 用 null，并扩大 radius_km。
+- 不要输出长篇解释。
 
 ${formatLearnedRules(learnedRules)}
 
@@ -85,29 +90,28 @@ ${RESULT_SCHEMA}
 
 export function buildFeedbackLearningPrompt(gameCase: GameCase): string {
   return `
-You are a street-view geolocation review coach. Convert one corrected round into up to 3 reusable learned rules.
-Requirements:
-- Rules must be short, specific, and transferable.
-- Do not write generic advice like "observe more carefully next time".
-- Do not claim to use hidden data.
-- Return strict JSON only. Do not return Markdown.
+你是街景定位复盘助手。请把本局纠错总结成最多 3 条可复用经验规则。
+要求：
+- 每条规则短、准、可迁移。
+- 不要写“以后仔细观察”这类空话。
+- 不要声称使用隐藏数据。
+- 只返回严格 JSON，不要 Markdown。
 
-Input:
-Original AI prediction:
+本局 AI 原判断：
 ${JSON.stringify(gameCase.aiPrediction ?? {}, null, 2)}
 
-Correct answer:
-Country/region: ${gameCase.correctCountry}
-City/area: ${gameCase.correctRegion || "not provided"}
-Coordinates: ${gameCase.correctLat ?? "not provided"}, ${gameCase.correctLng ?? "not provided"}
+正确答案：
+国家/地区：${gameCase.correctCountry}
+城市/区域：${gameCase.correctRegion || "未提供"}
+经纬度：${gameCase.correctLat ?? "未提供"}, ${gameCase.correctLng ?? "未提供"}
 
-User correction:
-${gameCase.userCorrectionText}
+用户纠错说明：
+${gameCase.userCorrectionText || "未提供"}
 
-Tags:
-${gameCase.tags.join(", ") || "not provided"}
+标签：
+${gameCase.tags.join(", ") || "未提供"}
 
-Return format:
+返回格式：
 {
   "rules": [
     {
@@ -125,15 +129,15 @@ Return format:
 
 function formatLearnedRules(rules: LearnedRule[]): string {
   if (rules.length === 0) {
-    return "User learned rules: none yet.";
+    return "本地学习规则：本次不使用历史规则。";
   }
 
   return [
-    "User learned rules from past corrections. Use them as hints, not as hard truth:",
+    "以下是用户过去纠错总结出的本地经验规则。只能参考，不能盲从：",
     ...rules.map((rule, index) => {
       const place = [rule.country, rule.region].filter(Boolean).join(" / ");
-      const tags = rule.tags.length ? `; tags: ${rule.tags.join(", ")}` : "";
-      return `${index + 1}. ${rule.title}: ${rule.ruleText}${place ? `; applies to: ${place}` : ""}${tags}`;
+      const tags = rule.tags.length ? `；标签：${rule.tags.join(", ")}` : "";
+      return `${index + 1}. ${rule.title}：${rule.ruleText}${place ? `；适用：${place}` : ""}${tags}`;
     })
   ].join("\n");
 }

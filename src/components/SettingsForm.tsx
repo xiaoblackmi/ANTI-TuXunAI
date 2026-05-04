@@ -38,8 +38,8 @@ export function SettingsForm({
       }}
     >
       <section className="settings-section">
-        <h2>API</h2>
-        <div className="preset-grid" aria-label="API presets">
+        <h2>API 配置</h2>
+        <div className="preset-grid" aria-label="API 预设">
           <button
             type="button"
             className="secondary-button"
@@ -52,7 +52,7 @@ export function SettingsForm({
               })
             }
           >
-            Qwen Singapore
+            Qwen 新加坡
           </button>
           <button
             type="button"
@@ -66,7 +66,7 @@ export function SettingsForm({
               })
             }
           >
-            Qwen Beijing
+            Qwen 北京
           </button>
           <button
             type="button"
@@ -80,7 +80,7 @@ export function SettingsForm({
               })
             }
           >
-            Qwen US
+            Qwen 美国
           </button>
         </div>
         <label>
@@ -106,7 +106,7 @@ export function SettingsForm({
           </div>
         </label>
         <label>
-          Model Name
+          模型名称
           <input
             value={settings.modelName}
             onChange={(event) => update("modelName", event.target.value)}
@@ -119,14 +119,14 @@ export function SettingsForm({
             checked={settings.useResponseFormat}
             onChange={(event) => update("useResponseFormat", event.target.checked)}
           />
-          Request strict JSON response_format
+          请求严格 JSON response_format
         </label>
       </section>
 
       <section className="settings-section">
-        <h2>Request and Image</h2>
+        <h2>请求与图片</h2>
         <label>
-          Request timeout in ms
+          请求超时时间（毫秒）
           <input
             type="number"
             min={2000}
@@ -136,7 +136,7 @@ export function SettingsForm({
           />
         </label>
         <label>
-          Image quality: {settings.imageQuality.toFixed(2)}
+          图片压缩质量：{settings.imageQuality.toFixed(2)}
           <input
             type="range"
             min={0.35}
@@ -149,14 +149,14 @@ export function SettingsForm({
       </section>
 
       <section className="settings-section">
-        <h2>Local Learning</h2>
+        <h2>本地学习</h2>
         <label className="check-line">
           <input
             type="checkbox"
             checked={settings.enableHistoryRetrieval}
             onChange={(event) => update("enableHistoryRetrieval", event.target.checked)}
           />
-          Enable learned-rule retrieval
+          启用历史经验检索（仅精准模式使用）
         </label>
         <label className="check-line">
           <input
@@ -164,20 +164,20 @@ export function SettingsForm({
             checked={settings.enableDebugLogs}
             onChange={(event) => update("enableDebugLogs", event.target.checked)}
           />
-          Enable debug logs
+          启用调试日志
         </label>
       </section>
 
       <div className="settings-actions">
         <button className="primary-button" type="submit" disabled={saving}>
-          {saving ? "Saving..." : "Save settings"}
+          {saving ? "保存中..." : "保存设置"}
         </button>
         <button className="secondary-button" type="button" onClick={onTestApi} disabled={testing || saving}>
-          {testing ? "Testing..." : "Test API"}
+          {testing ? "测试中..." : "测试 API"}
         </button>
         <button className="danger-button" type="button" onClick={onClearData}>
           <Trash2 size={16} />
-          Clear local data
+          清空本地数据
         </button>
       </div>
       {status ? <p className="status-text">{status}</p> : null}

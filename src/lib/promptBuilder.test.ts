@@ -18,7 +18,8 @@ describe("buildFastGeoPrompt", () => {
 
     const prompt = buildFastGeoPrompt([rule]);
     expect(prompt).toContain("Baltic poles");
-    expect(prompt).toContain("Use them as hints");
-    expect(prompt).toContain("Return strict JSON only");
+    expect(prompt).toContain("只能参考，不能盲从");
+    expect(prompt).toContain("只返回严格 JSON");
+    expect(prompt).toContain("不要延续上一张图");
   });
 });

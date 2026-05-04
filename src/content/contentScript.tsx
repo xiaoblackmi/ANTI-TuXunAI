@@ -46,17 +46,17 @@ function ensureHost(): HTMLDivElement {
 function createPanel(result: AnalysisResult): HTMLElement {
   const panel = el("aside", "geo-panel");
   const bar = el("div", "geo-panel-bar");
-  const title = el("span", "geo-panel-title", "Geo AI Assistant");
+  const title = el("span", "geo-panel-title", "图寻 AI 助手");
   const actions = el("div", "geo-panel-actions");
-  const collapseButton = button("-", "Collapse");
-  const copyButton = button("Copy", "Copy analysis result");
-  const closeButton = button("x", "Close");
+  const collapseButton = button("-", "收起");
+  const copyButton = button("复制", "复制分析结果");
+  const closeButton = button("x", "关闭");
 
   collapseButton.addEventListener("click", () => {
     panel.classList.toggle("collapsed");
     body.hidden = panel.classList.contains("collapsed");
     collapseButton.textContent = body.hidden ? ">" : "-";
-    collapseButton.title = body.hidden ? "Expand" : "Collapse";
+    collapseButton.title = body.hidden ? "展开" : "收起";
   });
   copyButton.addEventListener("click", async () => {
     await navigator.clipboard.writeText(JSON.stringify(result, null, 2));
@@ -79,7 +79,7 @@ function createPredictionCard(result: AnalysisResult): HTMLElement {
   const card = el("section", "prediction-card compact");
   const head = el("div", "card-head");
   const headingWrap = el("div");
-  headingWrap.append(el("span", "eyebrow", "AI Analysis"), el("h2", "", result.fast_answer || result.top_predictions[0]?.country || "Unknown"));
+  headingWrap.append(el("span", "eyebrow", "AI 判断"), el("h2", "", result.fast_answer || result.top_predictions[0]?.country || "未知"));
   head.append(headingWrap);
   card.append(head);
 
@@ -91,8 +91,8 @@ function createPredictionCard(result: AnalysisResult): HTMLElement {
   const locationText =
     location?.lat != null && location?.lng != null
       ? `${location.lat.toFixed(3)}, ${location.lng.toFixed(3)}`
-      : "Coordinates uncertain";
-  card.append(el("div", "location-line", `${locationText}${location?.radius_km ? ` | radius about ${location.radius_km} km` : ""}`));
+      : "坐标不确定";
+  card.append(el("div", "location-line", `${locationText}${location?.radius_km ? ` | 半径约 ${location.radius_km} km` : ""}`));
 
   const clues = el("div", "clue-list");
   result.clues.slice(0, 4).forEach((clue) => clues.append(createClue(clue)));

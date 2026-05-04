@@ -19,9 +19,9 @@ export function FloatingPanel({ result, onClose }: FloatingPanelProps) {
   return (
     <aside className={collapsed ? "geo-panel collapsed" : "geo-panel"}>
       <div className="geo-panel-bar">
-        <span className="geo-panel-title">Geo AI Assistant</span>
+        <span className="geo-panel-title">图寻 AI 助手</span>
         <div className="geo-panel-actions">
-          <button type="button" onClick={() => setCollapsed((value) => !value)} title={collapsed ? "展开" : "折叠"}>
+          <button type="button" onClick={() => setCollapsed((value) => !value)} title={collapsed ? "展开" : "收起"}>
             {collapsed ? <ChevronRight size={15} /> : <Minimize2 size={15} />}
           </button>
           <button type="button" onClick={handleCopy} title="复制分析结果">

@@ -1,162 +1,119 @@
-# GeoGuessr AI Assistant
+# 图寻 AI 助手
 
-Chrome Manifest V3 browser extension MVP for personal street-view observation training. It captures only the currently visible tab image, sends that screenshot to a user-configured OpenAI-compatible vision API, and stores review notes plus learned rules locally in IndexedDB.
+Chrome Manifest V3 浏览器插件 MVP，用于 GeoGuessr / 图寻类街景定位训练。插件只截取当前可见画面，调用用户自己配置的 OpenAI-compatible 多模态 API，并把复盘案例和学习规则保存在浏览器本地 IndexedDB。
 
-## Boundaries
+## 边界
 
-- Does not read hidden answers, coordinates, page internals, game APIs, or network metadata.
-- Does not click, guess, submit, or automate gameplay.
-- Does not use a custom server.
-- API keys are entered by the user and stored locally in IndexedDB.
-- Review cases do not store screenshots in this MVP. Only a screenshot hash is saved.
+- 不读取隐藏答案、隐藏坐标、页面变量、游戏接口或网络元数据。
+- 不自动点击、不自动提交答案、不操作游戏页面。
+- 不使用自有服务器。
+- API Key 由用户在设置页输入，只保存在本地。
+- MVP 不保存截图图片，只保存截图 hash、AI 结果、正确答案、纠错说明、标签和经验规则。
 
-## Machine Setup
+## 安装依赖
 
-Recommended local setup:
+推荐环境：
 
-- Node.js `24.14.1` from `.nvmrc`
+- Node.js `24.14.1`，见 `.nvmrc`
 - npm `>=10`
 - Git
-- GitHub CLI (`gh`) for push and PR workflows
-
-Bootstrap this machine with:
-
-```bash
-npm run setup:machine
-```
-
-This installs dependencies, runs `typecheck`, runs tests, runs a production build, validates the extension package, and checks whether GitHub CLI is available.
-
-## Install
+- GitHub CLI `gh`，用于提交和 PR 流程
 
 ```bash
 npm install
 ```
 
-## Local Development
+也可以一键检查机器环境：
+
+```bash
+npm run setup:machine
+```
+
+## 本地开发
 
 ```bash
 npm run dev
 ```
 
-Vite dev server is useful for UI iteration, but Chrome extension APIs such as `tabs.captureVisibleTab` only work after loading the built extension.
+Vite dev server 主要用于 UI 调试。`chrome.tabs.captureVisibleTab` 等扩展 API 需要加载构建后的插件才可用。
 
-## Build
+## 打包插件
 
 ```bash
 npm run build
 ```
 
-The unpacked extension is generated in `dist/`.
+打包结果在 `dist/`。
 
-## Load In Chrome
+## Chrome 加载插件
 
-1. Open `chrome://extensions`.
-2. Enable Developer mode.
-3. Click Load unpacked.
-4. Select the `dist/` folder.
-5. Pin `GeoGuessr AI Assistant` if desired.
+1. 打开 `chrome://extensions`。
+2. 打开右上角“开发者模式”。
+3. 点击“加载已解压的扩展程序”。
+4. 选择项目里的 `dist/` 文件夹。
+5. 建议把“图寻 AI 助手”固定到浏览器工具栏。
 
-For a repeatable local launch with an isolated Chrome profile:
+也可以用独立 Chrome 配置启动：
 
 ```bash
 npm run open:extension
 ```
 
-You can pass a page URL after `--`, for example:
+## 配置 Qwen3-VL Flash
 
-```bash
-npm run open:extension -- https://www.google.com/maps
-```
+打开插件设置页，填写：
 
-## Configure API
-
-Open the extension Options page and set:
-
-- API Base URL, for example `https://dashscope-intl.aliyuncs.com/compatible-mode/v1`
+- API Base URL，例如 `https://dashscope-intl.aliyuncs.com/compatible-mode/v1`
 - API Key
-- Model Name, for example `qwen3-vl-flash`
-- Timeout, image quality, history retrieval, and debug settings
+- Model Name，例如 `qwen3-vl-flash`
+- 请求超时、图片质量、历史经验检索、调试日志
 
-Use `Test API` in Options to verify that the configured provider can return parseable JSON before trying a screenshot analysis.
-
-The client calls:
+设置页提供 Qwen 新加坡、北京、美国三个预设。插件会请求：
 
 ```text
 {API Base URL}/chat/completions
 ```
 
-The request uses OpenAI-compatible chat completions with a text prompt and `image_url` data URL.
+请求格式兼容 OpenAI chat completions，消息里包含文本 prompt 和当前截图的 `image_url` data URL。
 
-### Qwen3-VL Flash
+## 使用方法
 
-The default MVP settings target Alibaba Cloud Model Studio / DashScope:
+1. 打开 GeoGuessr / 图寻类街景页面。
+2. 点击浏览器工具栏里的插件图标。
+3. 选择“快速”或“精准”。
+4. 点击“分析当前街景”。
+5. 查看 Popup 或网页右侧浮窗的判断结果。
+6. 本局结束后点击醒目的“学习反馈 / 复盘本局”。
+7. 输入正确国家/地区、纠错说明和标签。
+8. 插件会保存案例，并调用模型总结最多 3 条本地经验规则。
 
-- Singapore: `https://dashscope-intl.aliyuncs.com/compatible-mode/v1` with `qwen3-vl-flash`
-- Beijing: `https://dashscope.aliyuncs.com/compatible-mode/v1` with `qwen3-vl-flash`
-- Virginia: `https://dashscope-us.aliyuncs.com/compatible-mode/v1` with `qwen3-vl-flash-us`
+## 速度策略
 
-Alibaba Cloud documents Qwen-VL as OpenAI-compatible and lists `qwen3-vl-flash` among supported vision models:
+- 快速模式：最长边压缩到 `640px`，不加入历史规则，减少 prompt 和输出 token，目标 2-5 秒。
+- 精准模式：最长边压缩到 `1024px`，加入最近的通用学习规则，目标 5-10 秒。
+- 默认图片质量为 `0.72`。
+- 请求超时后 UI 会显示错误，不会卡死。
 
-- https://www.alibabacloud.com/help/en/model-studio/qwen-vl-compatible-with-openai
-- https://docs.qwencloud.com/developer-guides/getting-started/vision-models
+## 上一张图污染的处理
 
-## Usage
+每次分析都被视为独立新题。当前实现不会把上一张图的 AI 预测国家用于下一张图的检索或 prompt。
 
-1. Open a GeoGuessr or similar street-view page.
-2. Click the extension icon.
-3. Choose Fast Mode or Detailed Mode.
-4. Click Analyze Current Street View.
-5. Review the popup result or right-side floating panel.
-6. After the round ends, click Review This Round.
-7. Enter the correct answer, correction note, and tags.
-8. The extension saves the case locally and asks the model to summarize reusable learned rules.
+- 快速模式完全跳过历史规则，优先保证速度和独立性。
+- 精准模式只读取最近的通用 `LearnedRule`，不会读取 `lastAnalysis` 的国家候选。
+- Prompt 明确要求模型不要延续上一局或上一张截图的判断。
 
-## Modes
+## 本地学习
 
-- Fast Mode: compresses the screenshot to 768px longest side, asks for compact JSON, target 2-5 seconds.
-- Detailed Mode: compresses to 1280px longest side, includes more local learned rules, target 5-10 seconds.
+MVP 不训练大模型，只做本地案例存储和检索增强：
 
-## Local Learning
+- `GameCase` 保存复盘案例，不保存截图内容。
+- `LearnedRule` 保存用户纠错后总结出的短规则。
+- 设置页的“本地资料库”可以查看、编辑、删除规则，导入/导出规则，导出/恢复完整备份。
+- `embeddingSearch()` 已预留，未来可接入向量检索。
 
-This MVP does not train a model. It implements local continuous learning through retrieval-augmented prompting:
-
-- `GameCase` stores round feedback.
-- `LearnedRule` stores short reusable correction rules.
-- Future analysis reads the most recent or most relevant rules and includes them in the prompt.
-- The Options page includes a Local Library for viewing cases and learned rules, editing/deleting rules, marking cases useful, and importing/exporting rules as JSON.
-- The Local Library can export and restore a full local backup containing settings, saved cases, and learned rules.
-- `embeddingSearch()` is reserved for future vector search integration.
-
-Detailed Mode uses the previous analysis, when available, to retrieve more relevant learned rules by country, clue type, and extracted keywords.
-
-## Current Status
-
-Implemented:
-
-- MV3 extension scaffold with Popup, Options, service worker, and injected floating panel.
-- Visible-tab screenshot capture, canvas compression, and screenshot hashing.
-- OpenAI-compatible vision calls with Qwen3-VL Flash defaults and DashScope presets.
-- Timeout handling, strict JSON parsing, and fallback parsing for fenced or surrounded JSON.
-- Local IndexedDB settings, cases, learned rules, and review learning flow.
-- Local Library management for cases and learned rules.
-- Learned-rule import/export.
-- Full local backup export/restore.
-- API smoke test from Options.
-- Extension package validation for manifest paths and self-contained content script output.
-- GitHub Actions CI for install, typecheck, tests, build, and extension package validation.
-- Tests for JSON parsing, prompt rule injection, rule ranking, and query extraction.
-
-Still manual:
-
-- Loading `dist/` in Chrome and checking the extension UI visually.
-- Providing a real DashScope API key for live API verification.
-- Authenticating GitHub CLI with `gh auth login` if CLI PR workflows are needed.
-
-## Scripts
+## 常用脚本
 
 ```bash
-npm run setup:machine
 npm run test
 npm run typecheck
 npm run build
@@ -164,10 +121,12 @@ npm run validate:extension
 npm run open:extension
 ```
 
-## Notes
+## 当前仍需手动验证
 
-Because the API endpoint is user-configurable, the extension declares broad host permissions so it can call OpenAI-compatible providers directly from the browser extension context.
+- 在 Chrome 里加载 `dist/`，检查 Popup、设置页和右侧浮窗视觉效果。
+- 填入真实 DashScope API Key，测试 `qwen3-vl-flash` 的真实响应速度和 JSON 稳定性。
+- 如果需要 GitHub CLI PR 流程，需要先执行 `gh auth login`。
 
-Remote repository for this working copy:
+远程仓库：
 
 - `origin`: `https://github.com/xiaoblackmi/ANTI-TuXunAI.git`

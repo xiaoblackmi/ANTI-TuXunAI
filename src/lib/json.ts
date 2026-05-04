@@ -9,11 +9,11 @@ export function parseLooseJson<T>(raw: string): { ok: true; data: T } | { ok: fa
       try {
         return { ok: true, data: JSON.parse(objectMatch[0]) as T };
       } catch {
-        return { ok: false, error: "The model did not return parseable JSON." };
+        return { ok: false, error: "模型没有返回可解析的 JSON。" };
       }
     }
 
-    return { ok: false, error: "The model did not return parseable JSON." };
+    return { ok: false, error: "模型没有返回可解析的 JSON。" };
   }
 }
 

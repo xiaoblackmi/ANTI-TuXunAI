@@ -36,19 +36,19 @@ export function LocalDataPanel() {
 
   async function removeRule(id: string) {
     await deleteLearnedRule(id);
-    setStatus("Rule deleted.");
+    setStatus("经验规则已删除。");
     await refresh();
   }
 
   async function removeCase(id: string) {
     await deleteGameCase(id);
-    setStatus("Case deleted.");
+    setStatus("复盘案例已删除。");
     await refresh();
   }
 
   async function toggleUseful(gameCase: GameCase) {
     await updateGameCaseUsefulness(gameCase.id, !gameCase.isUseful);
-    setStatus("Case updated.");
+    setStatus("案例状态已更新。");
     await refresh();
   }
 
@@ -61,7 +61,7 @@ export function LocalDataPanel() {
     });
     setEditingRuleId(null);
     setDraftRule(null);
-    setStatus("Rule saved.");
+    setStatus("经验规则已保存。");
     await refresh();
   }
 
@@ -73,7 +73,7 @@ export function LocalDataPanel() {
   function exportRules() {
     const payload = JSON.stringify({ exportedAt: new Date().toISOString(), learnedRules: rules }, null, 2);
     downloadText(payload, `geo-ai-learned-rules-${new Date().toISOString().slice(0, 10)}.json`);
-    setStatus(`Exported ${rules.length} rule(s).`);
+    setStatus(`已导出 ${rules.length} 条经验规则。`);
   }
 
   async function importRules(file: File | undefined) {
@@ -85,10 +85,10 @@ export function LocalDataPanel() {
       for (const rule of importedRules) {
         await saveLearnedRule(rule);
       }
-      setStatus(`Imported ${importedRules.length} rule(s).`);
+      setStatus(`已导入 ${importedRules.length} 条经验规则。`);
       await refresh();
     } catch (error) {
-      setStatus(error instanceof Error ? `Import failed: ${error.message}` : "Import failed.");
+      setStatus(error instanceof Error ? `导入失败：${error.message}` : "导入失败。");
     } finally {
       if (importInputRef.current) importInputRef.current.value = "";
     }
@@ -97,7 +97,7 @@ export function LocalDataPanel() {
   async function exportBackup() {
     const backup = await createLocalBackup();
     downloadJson(backup, `geo-ai-backup-${new Date().toISOString().slice(0, 10)}.json`);
-    setStatus(`Exported backup with ${backup.cases.length} case(s) and ${backup.learnedRules.length} rule(s).`);
+    setStatus(`已导出备份：${backup.cases.length} 个案例，${backup.learnedRules.length} 条规则。`);
   }
 
   async function restoreBackup(file: File | undefined) {
@@ -106,10 +106,10 @@ export function LocalDataPanel() {
       const parsed = JSON.parse(await file.text()) as unknown;
       const backup = normalizeBackup(parsed);
       await restoreLocalBackup(backup);
-      setStatus(`Restored ${backup.cases.length} case(s) and ${backup.learnedRules.length} rule(s).`);
+      setStatus(`已恢复 ${backup.cases.length} 个案例和 ${backup.learnedRules.length} 条规则。`);
       await refresh();
     } catch (error) {
-      setStatus(error instanceof Error ? `Restore failed: ${error.message}` : "Restore failed.");
+      setStatus(error instanceof Error ? `恢复失败：${error.message}` : "恢复失败。");
     } finally {
       if (restoreInputRef.current) restoreInputRef.current.value = "";
     }
@@ -119,10 +119,10 @@ export function LocalDataPanel() {
     <section className="local-data-panel">
       <div className="section-head">
         <div>
-          <span className="eyebrow">Local Library</span>
-          <h2>Cases and learned rules</h2>
+          <span className="eyebrow">本地资料库</span>
+          <h2>复盘案例与经验规则</h2>
         </div>
-        <button className="icon-button" type="button" onClick={() => void refresh()} title="Refresh local data">
+        <button className="icon-button" type="button" onClick={() => void refresh()} title="刷新本地数据">
           <RefreshCw size={16} />
         </button>
       </div>
@@ -130,19 +130,19 @@ export function LocalDataPanel() {
       <div className="library-actions">
         <button className="secondary-button" type="button" onClick={exportRules} disabled={rules.length === 0}>
           <Download size={16} />
-          Export rules
+          导出规则
         </button>
         <button className="secondary-button" type="button" onClick={() => importInputRef.current?.click()}>
           <Upload size={16} />
-          Import rules
+          导入规则
         </button>
         <button className="secondary-button" type="button" onClick={() => void exportBackup()}>
           <Download size={16} />
-          Export backup
+          导出备份
         </button>
         <button className="secondary-button" type="button" onClick={() => restoreInputRef.current?.click()}>
           <Upload size={16} />
-          Restore backup
+          恢复备份
         </button>
         <input
           ref={importInputRef}
@@ -160,12 +160,12 @@ export function LocalDataPanel() {
         />
       </div>
 
-      <div className="mode-toggle data-tabs" role="group" aria-label="Local data view">
+      <div className="mode-toggle data-tabs" role="group" aria-label="本地数据视图">
         <button type="button" className={tab === "rules" ? "active" : ""} onClick={() => setTab("rules")}>
-          Rules ({rules.length})
+          规则 ({rules.length})
         </button>
         <button type="button" className={tab === "cases" ? "active" : ""} onClick={() => setTab("cases")}>
-          Cases ({cases.length})
+          案例 ({cases.length})
         </button>
       </div>
 
@@ -173,17 +173,17 @@ export function LocalDataPanel() {
 
       {tab === "rules" ? (
         <div className="data-list">
-          {rules.length === 0 ? <p className="muted-text">No learned rules yet.</p> : null}
+          {rules.length === 0 ? <p className="muted-text">还没有学习规则。</p> : null}
           {rules.map((rule) => (
             <article className="data-item" key={rule.id}>
               {editingRuleId === rule.id && draftRule ? (
                 <div className="rule-editor">
                   <label>
-                    Title
+                    标题
                     <input value={draftRule.title} onChange={(event) => setDraftRule({ ...draftRule, title: event.target.value })} />
                   </label>
                   <label>
-                    Rule
+                    规则内容
                     <textarea
                       rows={3}
                       value={draftRule.ruleText}
@@ -192,14 +192,14 @@ export function LocalDataPanel() {
                   </label>
                   <div className="field-grid">
                     <label>
-                      Country
+                      国家/地区
                       <input
                         value={draftRule.country ?? ""}
                         onChange={(event) => setDraftRule({ ...draftRule, country: event.target.value })}
                       />
                     </label>
                     <label>
-                      Region
+                      区域
                       <input
                         value={draftRule.region ?? ""}
                         onChange={(event) => setDraftRule({ ...draftRule, region: event.target.value })}
@@ -207,14 +207,14 @@ export function LocalDataPanel() {
                     </label>
                   </div>
                   <label>
-                    Tags
+                    标签
                     <input
                       value={draftRule.tags.join(", ")}
                       onChange={(event) => setDraftRule({ ...draftRule, tags: normalizeCsv(event.target.value) })}
                     />
                   </label>
                   <label>
-                    Confidence
+                    置信度
                     <input
                       type="number"
                       min={0}
@@ -227,10 +227,10 @@ export function LocalDataPanel() {
                   <div className="item-actions">
                     <button className="primary-button" type="button" onClick={() => void saveDraftRule()}>
                       <Save size={16} />
-                      Save
+                      保存
                     </button>
                     <button className="secondary-button" type="button" onClick={() => setEditingRuleId(null)}>
-                      Cancel
+                      取消
                     </button>
                   </div>
                 </div>
@@ -240,15 +240,15 @@ export function LocalDataPanel() {
                     <h3>{rule.title}</h3>
                     <p>{rule.ruleText}</p>
                     <small>
-                      {[rule.country, rule.region].filter(Boolean).join(" / ") || "No place"} | {rule.tags.join(", ") || "no tags"} |{" "}
+                      {[rule.country, rule.region].filter(Boolean).join(" / ") || "未指定地点"} | {rule.tags.join(", ") || "无标签"} |{" "}
                       {Math.round(rule.confidence * 100)}%
                     </small>
                   </div>
                   <div className="item-actions">
                     <button className="secondary-button" type="button" onClick={() => startEditingRule(rule)}>
-                      Edit
+                      编辑
                     </button>
-                    <button className="icon-button danger-icon" type="button" onClick={() => void removeRule(rule.id)} title="Delete rule">
+                    <button className="icon-button danger-icon" type="button" onClick={() => void removeRule(rule.id)} title="删除规则">
                       <Trash2 size={16} />
                     </button>
                   </div>
@@ -259,22 +259,22 @@ export function LocalDataPanel() {
         </div>
       ) : (
         <div className="data-list">
-          {cases.length === 0 ? <p className="muted-text">No saved cases yet.</p> : null}
+          {cases.length === 0 ? <p className="muted-text">还没有保存的复盘案例。</p> : null}
           {cases.map((gameCase) => (
             <article className="data-item" key={gameCase.id}>
               <div className="item-main">
                 <h3>{gameCase.correctCountry}</h3>
-                <p>{gameCase.userCorrectionText || "No correction note."}</p>
+                <p>{gameCase.userCorrectionText || "没有纠错说明。"}</p>
                 <small>
-                  {new Date(gameCase.createdAt).toLocaleString()} | {gameCase.tags.join(", ") || "no tags"} |{" "}
-                  {gameCase.isUseful ? "useful" : "not useful"}
+                  {new Date(gameCase.createdAt).toLocaleString()} | {gameCase.tags.join(", ") || "无标签"} |{" "}
+                  {gameCase.isUseful ? "有用" : "暂不使用"}
                 </small>
               </div>
               <div className="item-actions">
                 <button className="secondary-button" type="button" onClick={() => void toggleUseful(gameCase)}>
-                  {gameCase.isUseful ? "Mark unused" : "Mark useful"}
+                  {gameCase.isUseful ? "标为不使用" : "标为有用"}
                 </button>
-                <button className="icon-button danger-icon" type="button" onClick={() => void removeCase(gameCase.id)} title="Delete case">
+                <button className="icon-button danger-icon" type="button" onClick={() => void removeCase(gameCase.id)} title="删除案例">
                   <Trash2 size={16} />
                 </button>
               </div>
@@ -307,7 +307,7 @@ function normalizeImportedRules(input: unknown, options: { allowEmpty?: boolean 
       {
         id: typeof value.id === "string" ? value.id : crypto.randomUUID(),
         createdAt: typeof value.createdAt === "string" ? value.createdAt : now,
-        title: typeof value.title === "string" && value.title.trim() ? value.title : "Imported rule",
+        title: typeof value.title === "string" && value.title.trim() ? value.title : "导入规则",
         ruleText: value.ruleText,
         country: typeof value.country === "string" ? value.country : undefined,
         region: typeof value.region === "string" ? value.region : undefined,
@@ -321,7 +321,7 @@ function normalizeImportedRules(input: unknown, options: { allowEmpty?: boolean 
   });
 
   if (rules.length === 0 && !options.allowEmpty) {
-    throw new Error("No valid learned rules found.");
+    throw new Error("没有找到有效的经验规则。");
   }
 
   return rules;
@@ -347,10 +347,10 @@ function downloadText(text: string, filename: string) {
 
 function normalizeBackup(input: unknown) {
   if (!isRecord(input) || input.schemaVersion !== 1) {
-    throw new Error("Unsupported backup format.");
+    throw new Error("不支持的备份格式。");
   }
   if (!isRecord(input.settings)) {
-    throw new Error("Backup is missing settings.");
+    throw new Error("备份缺少设置数据。");
   }
   return {
     schemaVersion: 1 as const,
@@ -361,7 +361,7 @@ function normalizeBackup(input: unknown) {
       apiKey: typeof input.settings.apiKey === "string" ? input.settings.apiKey : "",
       modelName: typeof input.settings.modelName === "string" ? input.settings.modelName : "qwen3-vl-flash",
       timeoutMs: typeof input.settings.timeoutMs === "number" ? input.settings.timeoutMs : 5000,
-      imageQuality: typeof input.settings.imageQuality === "number" ? input.settings.imageQuality : 0.82,
+      imageQuality: typeof input.settings.imageQuality === "number" ? input.settings.imageQuality : 0.72,
       useResponseFormat: input.settings.useResponseFormat !== false,
       enableHistoryRetrieval: input.settings.enableHistoryRetrieval !== false,
       enableDebugLogs: input.settings.enableDebugLogs === true

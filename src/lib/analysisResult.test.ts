@@ -19,7 +19,7 @@ describe("normalizeAnalysisResult", () => {
 
   it("falls back to safe defaults", () => {
     const normalized = normalizeAnalysisResult(null);
-    expect(normalized.fast_answer).toBe("Unknown");
+    expect(normalized.fast_answer).toBe("未知");
     expect(normalized.estimated_location.radius_km).toBe(500);
     expect(normalized.top_predictions).toEqual([]);
   });

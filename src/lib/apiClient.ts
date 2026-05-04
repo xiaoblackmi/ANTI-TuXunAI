@@ -48,7 +48,7 @@ async function callOpenAiCompatibleJson<T>(
   options: VisionCallOptions
 ): Promise<ModelJsonResponse<T>> {
   if (!options.apiKey.trim()) {
-    return { ok: false, data: null, rawText: "", error: "Configure the API Key in Options first." };
+    return { ok: false, data: null, rawText: "", error: "请先在设置页填写 API Key。" };
   }
 
   const endpoint = `${options.apiBaseUrl.replace(/\/+$/, "")}/chat/completions`;
@@ -76,7 +76,7 @@ async function callOpenAiCompatibleJson<T>(
         ok: false,
         data: null,
         rawText: responseText,
-        error: `API request failed: ${response.status} ${response.statusText}`
+        error: `API 请求失败：${response.status} ${response.statusText}`
       };
     }
 
@@ -96,10 +96,10 @@ async function callOpenAiCompatibleJson<T>(
   } catch (error) {
     const message =
       error instanceof DOMException && error.name === "AbortError"
-        ? "Request timed out. Fast analysis failed; try Detailed Mode."
+        ? "请求超时。快速判断失败，可以切换精准模式重试。"
         : error instanceof Error
           ? error.message
-          : "Unknown API error.";
+          : "未知 API 错误。";
     return { ok: false, data: null, rawText: "", error: message };
   } finally {
     window.clearTimeout(timeout);
